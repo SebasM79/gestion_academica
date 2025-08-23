@@ -1,0 +1,64 @@
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Archivos de entorno
+.env
+venv/
+*.log
+
+# Archivos de Django
+db.sqlite3
+/staticfiles/
+/media/
+
+# Migraciones
+*/migrations/__pycache__/
+*/migrations/*.py
+
+# Configuración de editores
+.vscode/
+.idea/# Archivos de Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Archivos de entorno
+.env
+venv/
+*.log
+
+# Archivos de Django
+db.sqlite3
+/staticfiles/
+/media/
+
+# Migraciones
+*/migrations/__pycache__/
+*/migrations/*.py
+
+# Configuración de editores
+.vscode/
+.idea/# Archivos de Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Archivos de entorno
+.env
+venv/
+*.log
+
+# Archivos de Django
+db.sqlite3
+/staticfiles/
+/media/
+
+# Migraciones
+*/migrations/__pycache__/
+*/migrations/*.py
+
+# Configuración de editores
+.vscode/
+.idea/ddd
