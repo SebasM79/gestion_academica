@@ -1,0 +1,38 @@
+{% extends "base.html" %} {% block content %}
+<h1>{% if object %}Editar{% else %}Nueva{% endif %} Carrera</h1>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label for="{{ form.nombre.id_for_label }}" class="form-label"
+      >{{ form.nombre.label }}</label
+    >
+    {{ form.nombre }} {% if form.nombre.errors %}
+    <div class="text-danger">{{ form.nombre.errors }}</div>
+    {% endif %}
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.descripcion.id_for_label }}" class="form-label"
+      >{{ form.descripcion.label }}</label
+    >
+    {{ form.descripcion }} {% if form.descripcion.errors %}
+    <div class="text-danger">{{ form.descripcion.errors }}</div>
+    {% endif %}
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.duracion_anios.id_for_label }}" class="form-label"
+      >{{ form.duracion_anios.label }}</label
+    >
+    {{ form.duracion_anios }} {% if form.duracion_anios.errors %}
+    <div class="text-danger">{{ form.duracion_anios.errors }}</div>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="btn btn-success">Guardar</button>
+  <a href="{% url 'carreras:carrera_list' %}" class="btn btn-secondary"
+    >Cancelar</a
+  >
+</form>
+{% endblock %}
