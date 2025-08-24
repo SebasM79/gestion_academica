@@ -1,0 +1,42 @@
+{% extends "base.html" %} {% block content %}
+<h1>Lista de Carreras</h1>
+<a href="{% url 'carreras:carrera_create' %}" class="btn btn-primary"
+  >Nueva Carrera</a
+>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Duración (años)</th>
+      <th>Descripción</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for carrera in carreras %}
+    <tr>
+      <td>{{ carrera.nombre }}</td>
+      <td>{{ carrera.duracion_anios }}</td>
+      <td>{{ carrera.descripcion }}</td>
+      <td>
+        <a
+          href="{% url 'carreras:carrera_update' carrera.id %}"
+          class="btn btn-warning btn-sm"
+          >Editar</a
+        >
+        <a
+          href="{% url 'carreras:carrera_delete' carrera.id %}"
+          class="btn btn-danger btn-sm"
+          >Eliminar</a
+        >
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="4">No hay carreras cargadas</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
