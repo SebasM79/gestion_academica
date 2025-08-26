@@ -21,4 +21,5 @@ urlpatterns = [
    
     path('admin/', admin.site.urls),
     path('carreras/', include('carreras.urls')),  # importante que sea 'carreras/'
+    path('personal/', include('personal.urls')),  # agregamos personal
 ]
