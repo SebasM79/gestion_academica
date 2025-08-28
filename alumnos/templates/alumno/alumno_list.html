@@ -1,0 +1,50 @@
+{% extends "base.html" %} {% block content %}
+<h1>Lista de Alumnos</h1>
+<a href="{% url 'alumnos:alumno_create' %}" class="btn btn-primary"
+  >Nuevo Alumno</a
+>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Apellido</th>
+      <th>Nombre</th>
+      <th>DNI</th>
+      <th>Fecha Nacimiento</th>
+      <th>Carrera Principal</th>
+      <th>Email</th>
+      <th>Teléfono</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for alumno in alumnos %}
+    <tr>
+      <td>{{ alumno.apellido }}</td>
+      <td>{{ alumno.nombre }}</td>
+      <td>{{ alumno.dni }}</td>
+      <td>{{ alumno.fecha_nacimiento|date:"d/m/Y"|default:"-" }}</td>
+      <td>{{ alumno.carrera_principal.nombre|default:"Sin carrera" }}</td>
+      <td>{{ alumno.email }}</td>
+      <td>{{ alumno.telefono|default:"-" }}</td>
+      <td>
+        <a
+          href="{% url 'alumnos:alumno_update' alumno.id %}"
+          class="btn btn-warning btn-sm"
+          >Editar</a
+        >
+        <a
+          href="{% url 'alumnos:alumno_delete' alumno.id %}"
+          class="btn btn-danger btn-sm"
+          >Eliminar</a
+        >
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="8">No hay alumnos cargados</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

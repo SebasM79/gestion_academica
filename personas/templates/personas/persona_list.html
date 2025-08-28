@@ -1,0 +1,109 @@
+{% extends "base.html" %} {% block content %}
+<h1>Directorio de Personas del Sistema</h1>
+
+<div class="row">
+  <div class="col-md-6">
+    <h2>Personal</h2>
+    <a href="{% url 'personal:personal_create' %}" class="btn btn-primary mb-3">Nuevo Personal</a>
+    
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Apellido</th>
+          <th>Nombre</th>
+          <th>Cargo</th>
+          <th>Email</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for persona in personal %}
+        <tr>
+          <td>{{ persona.apellido }}</td>
+          <td>{{ persona.nombre }}</td>
+          <td>
+            <span class="badge {% if persona.cargo == 'DOCENTE' %}bg-success{% elif persona.cargo == 'ADMIN' %}bg-primary{% else %}bg-warning{% endif %}">
+              {{ persona.get_cargo_display }}
+            </span>
+          </td>
+          <td>{{ persona.email }}</td>
+          <td>
+            <a href="{% url 'personal:personal_update' persona.id %}" class="btn btn-warning btn-sm">Editar</a>
+            <a href="{% url 'personal:personal_delete' persona.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5">No hay personal cargado</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col-md-6">
+    <h2>Alumnos</h2>
+    <a href="{% url 'alumnos:alumno_create' %}" class="btn btn-success mb-3">Nuevo Alumno</a>
+    
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Apellido</th>
+          <th>Nombre</th>
+          <th>Carrera</th>
+          <th>Email</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for alumno in alumnos %}
+        <tr>
+          <td>{{ alumno.apellido }}</td>
+          <td>{{ alumno.nombre }}</td>
+          <td>{{ alumno.carrera_principal.nombre|default:"Sin carrera" }}</td>
+          <td>{{ alumno.email }}</td>
+          <td>
+            <a href="{% url 'alumnos:alumno_update' alumno.id %}" class="btn btn-warning btn-sm">Editar</a>
+            <a href="{% url 'alumnos:alumno_delete' alumno.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5">No hay alumnos cargados</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="mt-4">
+  <h3>Resumen del Sistema</h3>
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">{{ personal.count }}</h5>
+          <p class="card-text">Personal</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">{{ alumnos.count }}</h5>
+          <p class="card-text">Alumnos</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">{{ personal.count|add:alumnos.count }}</h5>
+          <p class="card-text">Total Personas</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

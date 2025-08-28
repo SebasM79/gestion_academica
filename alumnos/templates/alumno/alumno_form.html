@@ -1,0 +1,102 @@
+{% extends "base.html" %} {% block content %}
+<h1>{% if object %}Editar{% else %}Nuevo{% endif %} Alumno</h1>
+
+<form method="post">
+  {% csrf_token %}
+  
+  <div class="row">
+    <div class="col-md-6">
+      <div class="mb-3">
+        <label for="{{ form.nombre.id_for_label }}" class="form-label"
+          >{{ form.nombre.label }}</label
+        >
+        {{ form.nombre }} {% if form.nombre.errors %}
+        <div class="text-danger">{{ form.nombre.errors }}</div>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="mb-3">
+        <label for="{{ form.apellido.id_for_label }}" class="form-label"
+          >{{ form.apellido.label }}</label
+        >
+        {{ form.apellido }} {% if form.apellido.errors %}
+        <div class="text-danger">{{ form.apellido.errors }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="mb-3">
+        <label for="{{ form.dni.id_for_label }}" class="form-label"
+          >{{ form.dni.label }}</label
+        >
+        {{ form.dni }} {% if form.dni.errors %}
+        <div class="text-danger">{{ form.dni.errors }}</div>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="mb-3">
+        <label for="{{ form.fecha_nacimiento.id_for_label }}" class="form-label"
+          >{{ form.fecha_nacimiento.label }}</label
+        >
+        {{ form.fecha_nacimiento }} {% if form.fecha_nacimiento.errors %}
+        <div class="text-danger">{{ form.fecha_nacimiento.errors }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.email.id_for_label }}" class="form-label"
+      >{{ form.email.label }}</label
+    >
+    {{ form.email }} {% if form.email.errors %}
+    <div class="text-danger">{{ form.email.errors }}</div>
+    {% endif %}
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="mb-3">
+        <label for="{{ form.telefono.id_for_label }}" class="form-label"
+          >{{ form.telefono.label }}</label
+        >
+        {{ form.telefono }} {% if form.telefono.errors %}
+        <div class="text-danger">{{ form.telefono.errors }}</div>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="mb-3">
+        <label for="{{ form.direccion.id_for_label }}" class="form-label"
+          >{{ form.direccion.label }}</label
+        >
+        {{ form.direccion }} {% if form.direccion.errors %}
+        <div class="text-danger">{{ form.direccion.errors }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label for="{{ form.carrera_principal.id_for_label }}" class="form-label"
+      >{{ form.carrera_principal.label }}</label
+    >
+    {{ form.carrera_principal }} {% if form.carrera_principal.errors %}
+    <div class="text-danger">{{ form.carrera_principal.errors }}</div>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="btn btn-success">Guardar</button>
+  <a href="{% url 'alumnos:alumno_list' %}" class="btn btn-secondary"
+    >Cancelar</a
+  >
+</form>
+{% endblock %}
