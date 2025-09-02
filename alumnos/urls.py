@@ -9,3 +9,5 @@ urlpatterns = [
     path('<int:pk>/editar/', views.AlumnoUpdateView.as_view(), name='alumno_update'),
     path('<int:pk>/eliminar/', views.AlumnoDeleteView.as_view(), name='alumno_delete'),
 ]
+
+
