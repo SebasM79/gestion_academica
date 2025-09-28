@@ -1,8 +1,12 @@
 from django.db import models
+from django.contrib.auth.models import User
 from personas.models import Persona
 from materias.models import Materia
 
 class Personal(Persona):
+    # Vinculación con usuario de Django para autenticación
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name="personal")
+    
     CARGO_CHOICES = [
         ("ADMIN", "Administrativo"),
         ("DOCENTE", "Docente"),

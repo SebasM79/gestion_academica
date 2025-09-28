@@ -26,4 +26,7 @@ urlpatterns = [
     path('alumnos/', include('alumnos.urls')),  # agregamos alumnos
     path('personas/', include('personas.urls')),  # agregamos personas
     path('inscripciones/', include('inscripciones.urls')),  # agregamos inscripciones
+    path('notas/', include('notas.urls')),  # agregamos notas
+    path('accounts/', include('django.contrib.auth.urls')),  # login/logout/password
+    path('usuarios/', include('usuarios.urls')),  # registro y panel admin de usuarios
 ]

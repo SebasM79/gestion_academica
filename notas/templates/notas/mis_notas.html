@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Mis notas</h2>
+    <a href="{% url 'notas:lista_notas' %}" class="btn btn-secondary">Volver</a>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Estadísticas</h5>
+          <p><strong>Total de notas:</strong> {{ estadisticas.total_notas }}</p>
+          <p><strong>Aprobadas:</strong> {{ estadisticas.notas_aprobadas }}</p>
+          <p><strong>Desaprobadas:</strong> {{ estadisticas.notas_desaprobadas }}</p>
+          <p><strong>Promedio:</strong> {{ estadisticas.promedio }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if notas %}
+    <div class="table-responsive mt-3">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th>Materia</th>
+            <th>Nota</th>
+            <th>Profesor</th>
+            <th>Fecha</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for n in notas %}
+            <tr>
+              <td>{{ n.materia }}</td>
+              <td><strong>{{ n.nota }}</strong> {% if n.esta_aprobado %}<span class="badge text-bg-success">Aprobado</span>{% else %}<span class="badge text-bg-danger">No aprobado</span>{% endif %}</td>
+              <td>{{ n.profesor }}</td>
+              <td>{{ n.fecha_creacion|date:'d/m/Y H:i' }}</td>
+              <td>
+                <a href="{% url 'notas:detalle_nota' n.id %}" class="btn btn-sm btn-outline-secondary">Ver</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info">Aún no tienes notas registradas.</div>
+  {% endif %}
+</div>
+{% endblock %}

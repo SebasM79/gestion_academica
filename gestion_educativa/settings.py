@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'personal',
     'inscripciones',
     'notas',
-    'personas'
+    'personas',
+    'usuarios',
 ]
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
@@ -131,3 +132,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Autenticación por DNI además del backend por defecto
+AUTHENTICATION_BACKENDS = [
+    'usuarios.backends.DNIBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]

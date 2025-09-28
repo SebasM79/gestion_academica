@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Registros de usuarios</h2>
+
+  <h4 class="mt-4">Pendientes</h4>
+  {% if pendientes %}
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead><tr><th>Nombre</th><th>DNI</th><th>Rol</th><th>Cargo</th><th>Creado</th><th>Acciones</th></tr></thead>
+      <tbody>
+        {% for r in pendientes %}
+        <tr>
+          <td>{{ r.apellido }}, {{ r.nombre }}</td>
+          <td>{{ r.dni }}</td>
+          <td>{{ r.rol_solicitado }}</td>
+          <td>{{ r.cargo_solicitado }}</td>
+          <td>{{ r.creado_en|date:'d/m/Y H:i' }}</td>
+          <td class="d-flex gap-2">
+            <a href="{% url 'usuarios:aprobar_registro' r.id %}" class="btn btn-sm btn-success">Aprobar</a>
+            <form method="post" action="{% url 'usuarios:rechazar_registro' r.id %}">{% csrf_token %}
+              <input type="hidden" name="observaciones" value="Rechazado por admin">
+              <button type="submit" class="btn btn-sm btn-outline-danger">Rechazar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="alert alert-info">No hay registros pendientes.</div>
+  {% endif %}
+
+  <h4 class="mt-4">Aprobados (últimos)</h4>
+  <ul>
+    {% for r in aprobados %}
+    <li>{{ r.apellido }}, {{ r.nombre }} - {{ r.dni }} - {{ r.rol_solicitado }}</li>
+    {% empty %}
+    <li>Sin aprobados recientes</li>
+    {% endfor %}
+  </ul>
+
+  <h4 class="mt-4">Rechazados (últimos)</h4>
+  <ul>
+    {% for r in rechazados %}
+    <li>{{ r.apellido }}, {{ r.nombre }} - {{ r.dni }} - {{ r.rol_solicitado }}</li>
+    {% empty %}
+    <li>Sin rechazados recientes</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

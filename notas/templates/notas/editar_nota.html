@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Editar nota</h2>
+
+  <div class="card mt-3">
+    <div class="card-body">
+      <p><strong>Alumno:</strong> {{ nota.alumno }}</p>
+      <p><strong>Materia:</strong> {{ nota.materia }}</p>
+      <p><strong>Profesor:</strong> {{ nota.profesor }}</p>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="nota" class="form-label">Nota (1.00 - 10.00)</label>
+          <input id="nota" name="nota" type="number" class="form-control" step="0.01" min="1" max="10" value="{{ nota.nota }}" required />
+        </div>
+
+        <div class="mb-3">
+          <label for="observaciones" class="form-label">Observaciones</label>
+          <textarea id="observaciones" name="observaciones" class="form-control" rows="3">{{ nota.observaciones }}</textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+          {% if puede_editar %}
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+          {% endif %}
+          <a href="{% url 'notas:lista_notas' %}" class="btn btn-secondary">Volver</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

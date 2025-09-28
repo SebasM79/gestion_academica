@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Detalle de nota</h2>
+
+  <div class="card mt-3">
+    <div class="card-body">
+      <p><strong>Alumno:</strong> {{ nota.alumno }}</p>
+      <p><strong>Materia:</strong> {{ nota.materia }}</p>
+      <p><strong>Profesor:</strong> {{ nota.profesor }}</p>
+      <p><strong>Nota:</strong> {{ nota.nota }} {% if nota.esta_aprobado %}<span class="badge text-bg-success">Aprobado</span>{% else %}<span class="badge text-bg-danger">No aprobado</span>{% endif %}</p>
+      <p><strong>Fecha:</strong> {{ nota.fecha_creacion|date:'d/m/Y H:i' }}</p>
+      {% if nota.observaciones %}
+      <p><strong>Observaciones:</strong><br>{{ nota.observaciones|linebreaks }}</p>
+      {% endif %}
+
+      <div class="d-flex gap-2 mt-3">
+        {% if puede_editar %}
+          <a href="{% url 'notas:editar_nota' nota.id %}" class="btn btn-primary">Editar</a>
+        {% endif %}
+        <a href="{% url 'notas:lista_notas' %}" class="btn btn-secondary">Volver</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
