@@ -1,3 +1,9 @@
 from django.contrib import admin
+from .models import Carrera
 
-# Register your models here.
+@admin.register(Carrera)
+class CarreraAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'duracion_anios', 'descripcion']
+    list_filter = ['duracion_anios']
+    search_fields = ['nombre', 'descripcion']
+    ordering = ['nombre']

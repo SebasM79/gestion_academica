@@ -1,0 +1,9 @@
+* [33mf92e74c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m se crearon app nota, usuario y la logica del adminque define roles
+* [33md1799f9[m se creo la app Inscrpcion
+* [33mb91210a[m se esta creando app de insripcion
+* [33mf517c53[m actualizacion de app alumno
+* [33mc7d47e5[m creacion de app materia y las relaciones adheridas
+* [33mcda7802[m se creo tabla alumno y personas. este ultimo recibe total de personal y alumnos
+* [33m8301c62[m se creo la app person y personal
+* [33m24fecc3[m creacion completa de CRUD carrera
+* [33mc1ed89a[m se da inicio al proyecto en git

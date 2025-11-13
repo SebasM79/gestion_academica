@@ -1,0 +1,13 @@
+{% extends "base.html" %} {% block content %}
+<h1>Confirmar Eliminación</h1>
+<p>¿Estás seguro de que quieres eliminar al alumno "{{ object.apellido }}, {{ object.nombre }}"?</p>
+<p><strong>Esta acción no se puede deshacer.</strong></p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+  <a href="{% url 'alumnos:alumno_list' %}" class="btn btn-secondary"
+    >Cancelar</a
+  >
+</form>
+{% endblock %}

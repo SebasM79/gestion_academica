@@ -1,0 +1,52 @@
+{% extends "base.html" %} {% block content %}
+<h1>Lista de Personal</h1>
+<a href="{% url 'personal:personal_create' %}" class="btn btn-primary"
+  >Nuevo Personal</a
+>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Apellido</th>
+      <th>Nombre</th>
+      <th>DNI</th>
+      <th>Cargo</th>
+      <th>Email</th>
+      <th>Teléfono</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for persona in personal %}
+    <tr>
+      <td>{{ persona.apellido }}</td>
+      <td>{{ persona.nombre }}</td>
+      <td>{{ persona.dni }}</td>
+      <td>
+        <span class="badge {% if persona.cargo == 'DOCENTE' %}bg-success{% elif persona.cargo == 'ADMIN' %}bg-primary{% else %}bg-warning{% endif %}">
+          {{ persona.get_cargo_display }}
+        </span>
+      </td>
+      <td>{{ persona.email }}</td>
+      <td>{{ persona.telefono|default:"-" }}</td>
+      <td>
+        <a
+          href="{% url 'personal:personal_update' persona.id %}"
+          class="btn btn-warning btn-sm"
+          >Editar</a
+        >
+        <a
+          href="{% url 'personal:personal_delete' persona.id %}"
+          class="btn btn-danger btn-sm"
+          >Eliminar</a
+        >
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="7">No hay personal cargado</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

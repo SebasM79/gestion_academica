@@ -20,5 +20,14 @@ from django.urls import path, include
 urlpatterns = [
    
     path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
     path('carreras/', include('carreras.urls')),  # importante que sea 'carreras/'
+    path('materias/', include('materias.urls')),  # agregamos materias
+    path('personal/', include('personal.urls')),  # agregamos personal
+    path('alumnos/', include('alumnos.urls')),  # agregamos alumnos
+    path('personas/', include('personas.urls')),  # agregamos personas
+    path('inscripciones/', include('inscripciones.urls')),  # agregamos inscripciones
+    path('notas/', include('notas.urls')),  # agregamos notas
+    path('accounts/', include('django.contrib.auth.urls')),  # login/logout/password
+    path('usuarios/', include('usuarios.urls')),  # registro y panel admin de usuarios
 ]
