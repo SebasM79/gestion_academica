@@ -1,11 +1,14 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import RegistroUsuario
 
 class RegistroForm(forms.ModelForm):
     password1 = forms.CharField(
         label='Contraseña',
-        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        help_text='La contraseña debe tener al menos 8 caracteres'
     )
     password2 = forms.CharField(
         label='Confirmar contraseña',
@@ -37,15 +40,52 @@ class RegistroForm(forms.ModelForm):
         cleaned = super().clean()
         p1 = cleaned.get('password1')
         p2 = cleaned.get('password2')
+        dni = cleaned.get('dni')
+        nombre = cleaned.get('nombre', '')
+        apellido = cleaned.get('apellido', '')
+        email = cleaned.get('email', '')
+        
+        # Validar que las contraseñas coincidan
         if p1 and p2 and p1 != p2:
             self.add_error('password2', 'Las contraseñas no coinciden')
+        
+        # Validar que el DNI no esté en uso
+        if dni and User.objects.filter(username=dni).exists():
+            self.add_error('dni', 'Ya existe un usuario con ese DNI')
+        
+        # Validar que el DNI no esté en un registro pendiente
+        if dni and RegistroUsuario.objects.filter(dni=dni, estado='PENDIENTE').exists():
+            self.add_error('dni', 'Ya existe una solicitud de registro pendiente para este DNI')
+        
+        # Validar la contraseña usando los validadores de Django
+        # Crear un usuario temporal para la validación (necesario para UserAttributeSimilarityValidator)
+        if p1 and dni:
+            try:
+                # Crear un usuario temporal con los datos que tenemos para validar la contraseña
+                # Este usuario no se guarda, solo se usa para la validación
+                temp_user = User(username=dni, email=email, first_name=nombre, last_name=apellido)
+                validate_password(p1, user=temp_user)
+            except DjangoValidationError as e:
+                # Agregar cada error de validación al campo password1
+                for error in e.messages:
+                    self.add_error('password1', error)
+        
         return cleaned
 
     def save(self, commit=True):
         registro = super().save(commit=False)
         # Crear usuario inactivo con username = DNI
         username = registro.dni
-        user = User.objects.create_user(username=username, password=self.cleaned_data['password1'])
+        password = self.cleaned_data['password1']
+        
+        # Crear usuario con todos los datos disponibles
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            email=registro.email,
+            first_name=registro.nombre,
+            last_name=registro.apellido
+        )
         user.is_active = False
         user.save()
         registro.user = user

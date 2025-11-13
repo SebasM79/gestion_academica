@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-mlf+swf-4q@tco^*3$7g883m37i!pk)p^k2nsd3e5*53**j8@g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.56.1', '192.168.1.40']
 
 
 # Application definition
@@ -38,6 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third-party
+    'rest_framework',
+    'corsheaders',
+    # Local apps
+    'api',
     'alumnos',
     'carreras',
     'materias',
@@ -52,6 +57,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -119,22 +125,62 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+  
+ # Default primary key field type
+ # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Autenticación por DNI además del backend por defecto
+ # Autenticación por DNI además del backend por defecto
 AUTHENTICATION_BACKENDS = [
     'usuarios.backends.DNIBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+# CORS/CSRF para SPA (Vite por defecto corre en 5173)
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+    'http://192.168.56.1:8080',
+    'http://192.168.1.40:8080',
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+    'http://192.168.56.1:8080',
+    'http://192.168.1.40:8080',
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+]
+
+# Configuración de cookies para desarrollo (SameSite=Lax permite cookies en cross-origin con credentials)
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # False para que JavaScript pueda leerlo
+CSRF_COOKIE_SECURE = False  # False en desarrollo (True en producción con HTTPS)
+CSRF_USE_SESSIONS = False  # Usar cookies para CSRF token
+
+# Configuración DRF para usar sesiones y exigir autenticación por defecto
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
