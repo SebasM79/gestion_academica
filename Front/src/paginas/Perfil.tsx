@@ -58,7 +58,7 @@ const Perfil = () => {
             </CardHeader>
             <CardContent>
               <div className="space-x-2">
-                <Button onClick={() => navigate('/carreras')}>Ver Carreras</Button>
+                <Button onClick={() => navigate('/materias')}>Ver materias</Button>
               </div>
             </CardContent>
           </Card>
@@ -72,7 +72,7 @@ const Perfil = () => {
             <CardContent>
               <div className="space-x-2">
                 <Button onClick={() => refetch()}>Refrescar</Button>
-                <Button onClick={() => navigate('/carreras')} variant="secondary">Ver Carreras</Button>
+                <Button onClick={() => navigate('/materias')} variant="secondary">Ver materias de la carrera</Button>
               </div>
             </CardContent>
           </Card>

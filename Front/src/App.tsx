@@ -9,6 +9,8 @@ import Login from "@/paginas/Login";
 import Registro from "@/paginas/Registro";
 import NotFound from "@/paginas/NotFound";
 import Perfil from "@/paginas/Perfil";
+import Materias from "@/paginas/Materias";
+import MateriaDocente from "@/paginas/MateriaDocente";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +23,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/carreras" element={<Carreras />} />
+          <Route path="/materias" element={<Materias />} />
+          <Route path="/materias/:id" element={<MateriaDocente />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/perfil" element={<Perfil />} />

@@ -26,9 +26,13 @@
       "@/*": ["./src/*"],
       "@/components/*": ["./src/componentes/*"],
       "@/hooks/*": ["./src/ganchos/*"],
-      "@/pages/*": ["./src/paginas/*"]
+      "@/pages/*": ["./src/paginas/*"],
+      "@/componentes/*": ["./src/componentes/*"],
+      "@/ganchos/*": ["./src/ganchos/*"],
+      "@/paginas/*": ["./src/paginas/*"],
+      "@/activos/*": ["./src/activos/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "vite-env.d.ts"],
   "exclude": ["src/vite.config.ts"]
 }
