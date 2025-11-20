@@ -20,6 +20,12 @@ urlpatterns = [
 
     # Admin / Preceptor
     path('admin/stats/', views.AdminStatsView.as_view(), name='admin_stats'),
+    path('admin/materias/', views.AdminMaterias.as_view(), name='admin_materias'),
+    path('admin/alumnos/', views.AdminAlumnos.as_view(), name='admin_alumnos'),
+    path('admin/inscripciones/', views.AdminInscripciones.as_view(), name='admin_inscripciones'),
+    path('admin/usuarios/pendientes/', views.AdminUsuariosPendientesView.as_view(), name='admin_usuarios_pendientes'),
+    path('admin/usuarios/pendientes/<int:user_id>/aprobar/', views.AdminUsuariosAprobarView.as_view(), name='admin_usuarios_aprobar'),
+  #path('admin/usuarios/pendientes/<int:user_id>/rechazar/', views.AdminUsuariosRechazarView.as_view(), name='admin_usuarios_rechazar'),
 
     # Docente
     path('docente/materias/', views.DocenteMateriasView.as_view(), name='docente_materias'),

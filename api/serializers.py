@@ -5,6 +5,7 @@ from alumnos.models import Alumno
 from notas.models import Nota
 from personal.models import Personal
 from usuarios.models import RegistroUsuario
+from inscripciones.models import InscripcionCarrera
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -23,8 +24,23 @@ class MateriaSerializer(serializers.ModelSerializer):
         model = Materia
         fields = ["id", "nombre", "horario", "cupo", "carrera"]
 
+class PersonalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Personal
+        fields = [
+            "id",
+            "nombre",
+            "apellido",
+            "dni",
+            "email",
+            "telefono",
+            "direccion",
+            "cargo",
+        ]
+
 
 class AlumnoSerializer(serializers.ModelSerializer):
+    carrera_principal = CarreraSerializer(read_only=True)
     class Meta:
         model = Alumno
         fields = [
@@ -37,6 +53,21 @@ class AlumnoSerializer(serializers.ModelSerializer):
             "direccion",
             "fecha_nacimiento",
             "carrera_principal",
+        ]
+
+class InscripcionCarreraSerializer(serializers.ModelSerializer):
+    alumno = AlumnoSerializer(read_only=True)
+    carrera = CarreraSerializer(read_only=True)
+    responsable = PersonalSerializer(read_only=True)
+
+    class Meta:
+        model = InscripcionCarrera
+        fields = [
+            "id",
+            "alumno",
+            "carrera",
+            "responsable",
+            "fecha_inscripcion",
         ]
 
 
@@ -62,22 +93,6 @@ class NotaUpsertSerializer(serializers.ModelSerializer):
     class Meta:
         model = Nota
         fields = ["alumno", "materia", "nota", "observaciones"]
-
-
-class PersonalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Personal
-        fields = [
-            "id",
-            "nombre",
-            "apellido",
-            "dni",
-            "email",
-            "telefono",
-            "direccion",
-            "cargo",
-        ]
-
 
 class RegistroUsuarioSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(
@@ -217,3 +232,24 @@ class RegistroUsuarioSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"error": [f"Error al crear el registro: {error_msg}"]})
         
         return registro
+    
+class UsuariosPendientesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegistroUsuario
+        fields = [
+            "id",
+            "nombre",
+            "apellido",
+            "dni",
+            "email",
+            "telefono",
+            "direccion",
+            "rol_solicitado",
+            "cargo_solicitado",
+            "estado",
+            "creado_en",
+            "aprobado_en",
+            "observaciones_admin",
+            "aprobado_por_id",
+            "user_id",
+        ]

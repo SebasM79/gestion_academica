@@ -13,6 +13,10 @@ from materias.models import Materia
 from alumnos.models import Alumno
 from notas.models import Nota
 from personal.models import Personal, AsignacionDocente
+from inscripciones.models import InscripcionCarrera
+from usuarios.models import RegistroUsuario
+
+from django.contrib.auth.models import User
 
 from .serializers import (
     CarreraSerializer,
@@ -21,6 +25,8 @@ from .serializers import (
     NotaSerializer,
     NotaUpsertSerializer,
     PersonalSerializer,
+    InscripcionCarreraSerializer,
+    UsuariosPendientesSerializer,
 )
 from .permissions import IsAlumno, IsAdminOrPreceptor, IsDocente
 
@@ -93,10 +99,16 @@ class LoginView(APIView):
                     login(request, user_check)
                     # Responder con datos mínimos del perfil
                     rol = None
-                    if hasattr(user_check, "alumno") and user_check.alumno:
+                    if user_check.is_superuser or user_check.is_staff:
+                        rol = "ADMIN"
+                    elif hasattr(user_check, "alumno"):
                         rol = "ALUMNO"
-                    elif hasattr(user_check, "personal") and user_check.personal:
-                        rol = f"PERSONAL:{user_check.personal.cargo}"
+                    elif hasattr(user_check, "personal"):
+                        cargo = getattr(user_check.personal, "cargo", None)
+                        rol = f"PERSONAL:{cargo}" if cargo else "PERSONAL"
+                    else:
+                        rol = "INVITADO"
+
                     return Response({"ok": True, "rol": rol})
             
             # Si llegamos aquí, las credenciales son inválidas
@@ -105,12 +117,22 @@ class LoginView(APIView):
         # Si authenticate() funcionó correctamente
         login(request, user)
         # Responder con datos mínimos del perfil
-        rol = None
-        if hasattr(user, "alumno") and user.alumno:
+        # Determinar rol
+        if user.is_superuser or user.is_staff:
+            rol = "ADMIN"
+        elif hasattr(user, "alumno"):
             rol = "ALUMNO"
-        elif hasattr(user, "personal") and user.personal:
-            rol = f"PERSONAL:{user.personal.cargo}"
-        return Response({"ok": True, "rol": rol})
+        elif hasattr(user, "personal"):
+            cargo = getattr(user.personal, "cargo", None)
+            rol = f"PERSONAL:{cargo}" if cargo else "PERSONAL"
+        else:
+            rol = "INVITADO"  # opcional, por si hay usuarios sin perfil
+
+        return Response({
+            "ok": True,
+            "rol": rol
+        })
+
 
 
 class LogoutView(APIView):
@@ -350,3 +372,109 @@ class DocenteMateriaUpdateDeleteView(APIView):
             return Response({"detail": "No asignado a la materia"}, status=status.HTTP_403_FORBIDDEN)
         materia.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class AdminMaterias(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def get(self, request):
+        materias = Materia.objects.all()
+        return Response(MateriaSerializer(materias, many=True).data)
+    
+class AdminAlumnos(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def get(self, request):
+        alumnos = Alumno.objects.all()
+
+        return Response(AlumnoSerializer(alumnos, many=True).data)
+    
+class AdminInscripciones(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def get(self, request):
+        inscripciones = InscripcionCarrera.objects.all()
+
+        if inscripciones:
+            return Response(InscripcionCarreraSerializer(inscripciones, many=True).data)
+        
+class AdminUsuariosPendientesView(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def get(self, request):
+        registros_pendientes = RegistroUsuario.objects.filter(estado='PENDIENTE')
+        return Response(UsuariosPendientesSerializer(registros_pendientes, many=True).data)
+    
+
+class AdminUsuariosAprobarView(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def patch(self, request, user_id: int):
+        try:
+            registro = RegistroUsuario.objects.get(id=user_id)
+        except RegistroUsuario.DoesNotExist:
+            return Response({"detail": "Registro no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        if registro.estado != "PENDIENTE":
+            return Response({"detail": "El registro no está en estado PENDIENTE"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Obtener o crear User asociado
+        user = getattr(registro, "user", None)
+        if not user:
+            username = getattr(registro, "dni", None) or getattr(registro, "email", None) or f"user_{registro.id}"
+            user = User.objects.create(username=username, email=getattr(registro, "email", ""))
+            # Intentar asignar contraseña si está disponible en el registro (opcional)
+            pwd = getattr(registro, "password", None) or getattr(registro, "password1", None)
+            if pwd:
+                user.set_password(pwd)
+            else:
+                user.set_unusable_password()
+            user.save()
+            # Si el modelo RegistroUsuario tiene campo user, intentar ligarlo
+            try:
+                registro.user = user
+            except Exception:
+                pass
+
+        # Asignar permisos según rol solicitado
+        user.is_active = True
+        if getattr(registro, "rol_solicitado", "") == "PERSONAL":
+            user.is_staff = True
+        else:
+            user.is_staff = False
+        user.save()
+
+        # Crear perfil si hace falta
+        try:
+            if registro.rol_solicitado == "ALUMNO":
+                if not hasattr(user, "alumno") or user.alumno is None:
+                    Alumno.objects.create(
+                        user=user,
+                        nombre=registro.nombre,
+                        apellido=registro.apellido,
+                        dni=registro.dni,
+                        email=registro.email or "",
+                        telefono=getattr(registro, "telefono", None),
+                        direccion=getattr(registro, "direccion", None),
+                        carrera_principal=None,
+                    )
+            elif registro.rol_solicitado == "PERSONAL":
+                if not hasattr(user, "personal") or user.personal is None:
+                    Personal.objects.create(
+                        user=user,
+                        nombre=registro.nombre,
+                        apellido=registro.apellido,
+                        dni=registro.dni,
+                        email=registro.email or "",
+                        telefono=getattr(registro, "telefono", None),
+                        direccion=getattr(registro, "direccion", None),
+                        cargo=getattr(registro, "cargo_solicitado", "") or "",
+                    )
+        except Exception as e:
+            # Log opcional y continuar; no queremos dejar el registro sin marcar
+            import logging
+            logging.getLogger(__name__).warning(f"Error creando perfil al aprobar usuario {registro.id}: {e}")
+
+        registro.estado = "APROBADO"
+        registro.save()
+
+        return Response({"ok": True, "mensaje": "Usuario aprobado"}, status=status.HTTP_200_OK)
