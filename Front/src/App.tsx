@@ -9,15 +9,17 @@ import Login from "@/paginas/Login";
 import Registro from "@/paginas/Registro";
 import NotFound from "@/paginas/NotFound";
 import Perfil from "@/paginas/Perfil";
+import ChangePassword from "./paginas/ChangePassword";
 
 import AdminDashboard from "@/paginas/admin/AdminDashboard";
 import GestionCarreras from "@/paginas/admin/GestionCarrera";
 import GestionMaterias from "@/paginas/admin/GestionMaterias";
 import GestionAlumnos from "@/paginas/admin/GestionAlumnos";
-import GestionUsuarios from "@/paginas/admin/GestionUsuarios";
-import GestionInscripciones from "@/paginas/admin/GestionInscripciones";
 
 import AlumnoDashboard from "@/paginas/AlumnoDashboard";
+
+import PreceptorDashboard from "./paginas/preceptor/PreceptorDashboard";
+import PreceptorAlumnoDetalle from "./paginas/preceptor/PreceptorAlumnoDetalle";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/carreras" element={<Carreras />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/cambiar-contrasena" element={<ChangePassword />} />
+
           <Route path="/registro" element={<Registro />} />
           <Route path="/perfil" element={<Perfil />} />
 
@@ -38,8 +42,9 @@ const App = () => (
           <Route path="/admin/carreras" element={<GestionCarreras />} />
           <Route path="/admin/materias" element={<GestionMaterias />} />
           <Route path="/admin/alumnos" element={<GestionAlumnos />} />
-          <Route path="/admin/usuarios" element={<GestionUsuarios />} />
-          <Route path="/admin/inscripciones" element={<GestionInscripciones />} />
+
+          <Route path="/preceptor" element={<PreceptorDashboard />} />
+          <Route path="/preceptor/alumnos/:alumnoId" element={<PreceptorAlumnoDetalle />} />
 
           <Route path="/alumno" element={<AlumnoDashboard />} />
 

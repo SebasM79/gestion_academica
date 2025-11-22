@@ -15,7 +15,11 @@ export async function fetchMe() {
 }
 
 export async function loginDni(dni: string, password: string) {
-  return apiPost<{ ok: boolean; rol: string | null }>("/login/", { dni, password });
+  return apiPost<{ ok: boolean; rol: string | null , must_change_password: boolean}>("/login/", { dni, password });
+}
+
+export async function changePassword(new_password1: string, new_password2: string) {
+  return apiPost<{ ok: boolean }>("/me/change-password/", { new_password1, new_password2 });
 }
 
 export async function logout() {
@@ -31,8 +35,7 @@ export type RegistroPayload = {
   direccion?: string;
   rol_solicitado: 'ALUMNO' | 'PERSONAL';
   cargo_solicitado?: 'ADMIN' | 'DOCENTE' | 'PRECEPTOR' | '';
-  password1: string;
-  password2: string;
+  carrera_solicitada?: number;
 };
 
 export async function registroUsuario(payload: RegistroPayload) {

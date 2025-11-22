@@ -12,6 +12,7 @@ import {
   fetchAllInscripciones, 
   fetchPendingUsers,
   approvePendingUser,
+  rejectPendingUser,
 
 } from "@/api/admin";
 import { fetchCarreras } from "@/api/catalogo"; 
@@ -25,7 +26,6 @@ import {
   Trash2,
   Edit,
   Loader,
-  BarChart3,
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -151,80 +151,24 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteCarrera = async (carreraId: number) => {
-    if (!confirm("¿Está seguro de eliminar esta carrera?")) return;
-
-    try {
-      const res = await fetch(`/api/carreras/${carreraId}/`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (res.ok) {
-        toast({
-          title: "Éxito",
-          description: "Carrera eliminada correctamente",
-        });
-        setCarreras((prev) => prev.filter((c) => c.id !== carreraId));
-      }
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la carrera",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteMateria = async (materiaId: number) => {
-    if (!confirm("¿Está seguro de eliminar esta materia?")) return;
-
-    try {
-      const res = await fetch(`/api/materias/${materiaId}/`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (res.ok) {
-        toast({
-          title: "Éxito",
-          description: "Materia eliminada correctamente",
-        });
-        setMaterias((prev) => prev.filter((m) => m.id !== materiaId));
-      }
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la materia",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteAlumno = async (alumnoId: number) => {
-    if (!confirm("¿Está seguro de eliminar este alumno?")) return;
-
-    try {
-      const res = await fetch(`/api/alumnos/${alumnoId}/`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (res.ok) {
-        toast({
-          title: "Éxito",
-          description: "Alumno eliminado correctamente",
-        });
-        setAlumnos((prev) => prev.filter((a) => a.id !== alumnoId));
-      }
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar el alumno",
-        variant: "destructive",
-      });
-    }
-  };
+  const handleRejectUser = async (usuarioId: number) => {
+  try {
+    await rejectPendingUser(usuarioId);
+    toast({
+      title: "Éxito",
+      description: "Usuario rechazado correctamente",
+    });
+    setUsuariosPendientes((prev) =>
+      prev.filter((u) => u.id !== usuarioId)
+    );
+  } catch (err) {
+    toast({
+      title: "Error",
+      description: "No se pudo rechazar el usuario",
+      variant: "destructive",
+    });
+  }
+};
 
   if (loading) {
     return (
@@ -401,14 +345,7 @@ const AdminDashboard = () => {
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                onClick={() => {
-                                  // TODO: Implementar rechazo
-                                  toast({
-                                    title: "Próximamente",
-                                    description:
-                                      "Función de rechazo en desarrollo",
-                                  });
-                                }}
+                                onClick={() => handleRejectUser(usuario.id)}
                               >
                                 Rechazar
                               </Button>
@@ -440,15 +377,12 @@ const AdminDashboard = () => {
                   <Button
                     size="sm"
                     className="gap-2"
-                    onClick={() => {
-                      toast({
-                        title: "Próximamente",
-                        description: "Formulario de crear carrera en desarrollo",
-                      });
-                    }}
+                    asChild
                   >
-                    <Plus className="h-4 w-4" />
-                    Nueva Carrera
+                    <Link to="/admin/carreras">
+                      <Settings className="h-4 w-4" />
+                      Gestionar Carreras
+                    </Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -473,30 +407,6 @@ const AdminDashboard = () => {
                               <p className="text-sm text-muted-foreground">
                                 {carrera.descripcion}
                               </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  toast({
-                                    title: "Próximamente",
-                                    description:
-                                      "Formulario de editar en desarrollo",
-                                  });
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() =>
-                                  handleDeleteCarrera(carrera.id)
-                                }
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
                             </div>
                           </div>
                         </CardContent>
@@ -525,15 +435,12 @@ const AdminDashboard = () => {
                   <Button
                     size="sm"
                     className="gap-2"
-                    onClick={() => {
-                      toast({
-                        title: "Próximamente",
-                        description: "Formulario de crear materia en desarrollo",
-                      });
-                    }}
+                    asChild
                   >
-                    <Plus className="h-4 w-4" />
-                    Nueva Materia
+                    <Link to="/admin/materias">
+                      <Settings className="h-4 w-4" />
+                      Gestionar materias
+                    </Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -562,30 +469,6 @@ const AdminDashboard = () => {
                                 Cupo: {materia.cupo}
                               </p>
                             </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  toast({
-                                    title: "Próximamente",
-                                    description:
-                                      "Formulario de editar en desarrollo",
-                                  });
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() =>
-                                  handleDeleteMateria(materia.id)
-                                }
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -600,13 +483,27 @@ const AdminDashboard = () => {
           <TabsContent value="alumnos" className="mt-6">
             <Card className="shadow-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  Gestionar Alumnos
-                </CardTitle>
-                <CardDescription>
-                  {alumnos.length} alumno{alumnos.length !== 1 ? "s" : ""} registrado{alumnos.length !== 1 ? "s" : ""}
-                </CardDescription>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5" />
+                      Gestionar Alumnos
+                    </CardTitle>
+                    <CardDescription>
+                      {alumnos.length} alumno{alumnos.length !== 1 ? "s" : ""} registrado{alumnos.length !== 1 ? "s" : ""}
+                    </CardDescription>    
+                  </div>
+                <Button
+                    size="sm"
+                    className="gap-2"
+                    asChild
+                  >
+                    <Link to="/admin/alumnos">
+                      <Settings className="h-4 w-4" />
+                      Gestionar alumnos
+                    </Link>
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {alumnos.length === 0 ? (
@@ -622,7 +519,6 @@ const AdminDashboard = () => {
                           <th className="text-left p-3 font-semibold">DNI</th>
                           <th className="text-left p-3 font-semibold">Email</th>
                           <th className="text-left p-3 font-semibold">Carrera</th>
-                          <th className="text-center p-3 font-semibold">Acciones</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -642,32 +538,6 @@ const AdminDashboard = () => {
                             </td>
                             <td className="p-3 text-muted-foreground">
                               {alumno.carrera_principal?.nombre || "-"}
-                            </td>
-                            <td className="p-3 text-center">
-                              <div className="flex justify-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => {
-                                    toast({
-                                      title: "Próximamente",
-                                      description:
-                                        "Formulario de editar en desarrollo",
-                                    });
-                                  }}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() =>
-                                    handleDeleteAlumno(alumno.id)
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
                             </td>
                           </tr>
                         ))}
@@ -699,11 +569,10 @@ const AdminDashboard = () => {
                       <thead className="bg-accent/5">
                         <tr>
                           <th className="text-left p-3 font-semibold">Alumno</th>
-                          <th className="text-left p-3 font-semibold">Materia</th>
+                          <th className="text-left p-3 font-semibold">Carrera</th>
                           <th className="text-left p-3 font-semibold">
                             Fecha Inscripción
                           </th>
-                          <th className="text-left p-3 font-semibold">Responsable</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -723,11 +592,6 @@ const AdminDashboard = () => {
                               {new Date(
                                 inscripcion.fecha_inscripcion
                               ).toLocaleDateString("es-ES")}
-                            </td>
-                            <td className="p-3 text-muted-foreground">
-                              {inscripcion.responsable
-                                ? `${inscripcion.responsable.nombre} ${inscripcion.responsable.apellido}`
-                                : "N/A"}
                             </td>
                           </tr>
                         ))}

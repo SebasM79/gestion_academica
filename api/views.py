@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.utils.decorators import method_decorator
@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 from carreras.models import Carrera
 from materias.models import Materia
@@ -109,7 +111,8 @@ class LoginView(APIView):
                     else:
                         rol = "INVITADO"
 
-                    return Response({"ok": True, "rol": rol})
+                    must_change = user_check.check_password(user_check.username)
+                    return Response({"ok": True, "rol": rol, "must_change_password": must_change})
             
             # Si llegamos aquí, las credenciales son inválidas
             return Response({"detail": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -128,12 +131,34 @@ class LoginView(APIView):
         else:
             rol = "INVITADO"  # opcional, por si hay usuarios sin perfil
 
+        must_change = user.check_password(user.username)
         return Response({
             "ok": True,
-            "rol": rol
+            "rol": rol,
+            "must_change_password": must_change
         })
 
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [JSONParser]
 
+    def post(self, request):
+        new1 = request.data.get("new_password1")
+        new2 = request.data.get("new_password2")
+        if not new1 or not new2:
+            return Response({"detail": "Se requieren ambos campos de contraseña"}, status=status.HTTP_400_BAD_REQUEST)
+        if new1 != new2:
+            return Response({"detail": "Las contraseñas no coinciden"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_password(new1, user=request.user)
+        except ValidationError as e:
+            return Response({"detail": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+        request.user.set_password(new1)
+        request.user.save()
+        # Mantener la sesión activa después del cambio
+        update_session_auth_hash(request, request.user)
+        return Response({"ok": True, "mensaje": "Contraseña actualizada"})
 
 class LogoutView(APIView):
     def post(self, request):
@@ -220,7 +245,47 @@ class CarrerasListView(APIView):
     def get(self, request):
         carreras = Carrera.objects.all()
         return Response(CarreraSerializer(carreras, many=True).data)
+class CarreraDetailView(APIView):
+    permission_classes = [permissions.AllowAny]
+    #Consigue una carrera por ID
+    def get(self, request, carrera_id: int):
+        try:
+            carrera = Carrera.objects.get(id=carrera_id)
+            return Response(CarreraSerializer(carrera).data)
+        except Carrera.DoesNotExist:
+            return Response({"detail": "Carrera no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+    #Actualiza una carrera por ID
+    def patch(self, request, carrera_id: int):
+        try:
+            carrera = Carrera.objects.get(id=carrera_id)
+        except Carrera.DoesNotExist:
+            return Response({"detail": "Carrera no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = CarreraSerializer(carrera, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #Elimina una carrera por ID
+    def delete(self, request, carrera_id: int):
+        try:
+            carrera = Carrera.objects.get(id=carrera_id)
+        except Carrera.DoesNotExist:
+            return Response({"detail": "Carrera no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+        
+        carrera.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
+class CarreraCreateView(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def post(self, request):
+        serializer = CarreraSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class MateriasByCarreraView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -379,7 +444,59 @@ class AdminMaterias(APIView):
     def get(self, request):
         materias = Materia.objects.all()
         return Response(MateriaSerializer(materias, many=True).data)
+
+class AdminCreateMateria(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def post(self, request):
+        nombre = request.data.get("nombre")
+        horario = request.data.get("horario", "")
+        cupo = request.data.get("cupo", 30)
+        carrera_id = request.data.get("carrera")
+        if not (nombre and carrera_id):
+            return Response({"detail": "nombre y carrera son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            carrera = Carrera.objects.get(id=carrera_id)
+        except Carrera.DoesNotExist:
+            return Response({"detail": "Carrera no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
+        materia = Materia.objects.create(nombre=nombre, horario=horario, cupo=cupo, carrera=carrera)
+        return Response(MateriaSerializer(materia).data, status=status.HTTP_201_CREATED)
     
+class AdminMateriaDetailView(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def patch(self, request, materia_id: int):
+        try:
+            materia = Materia.objects.get(id=materia_id)
+        except Materia.DoesNotExist:
+            return Response({"detail": "Materia no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Permitir actualizar nombre/horario/cupo/carrera
+        if "nombre" in request.data:
+            materia.nombre = request.data["nombre"]
+        if "horario" in request.data:
+            materia.horario = request.data["horario"]
+        if "cupo" in request.data:
+            try:
+                materia.cupo = int(request.data["cupo"])
+            except (TypeError, ValueError):
+                pass
+        if "carrera" in request.data:
+            try:
+                carrera = Carrera.objects.get(id=request.data["carrera"])
+                materia.carrera = carrera
+            except Carrera.DoesNotExist:
+                return Response({"detail": "Carrera no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
+        materia.save()
+        return Response(MateriaSerializer(materia).data)
+
+    def delete(self, request, materia_id: int):
+        try:
+            materia = Materia.objects.get(id=materia_id)
+        except Materia.DoesNotExist:
+            return Response({"detail": "Materia no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+        materia.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 class AdminAlumnos(APIView):
     permission_classes = [IsAdminOrPreceptor]
 
@@ -387,6 +504,42 @@ class AdminAlumnos(APIView):
         alumnos = Alumno.objects.all()
 
         return Response(AlumnoSerializer(alumnos, many=True).data)
+
+class AdminAlumnosDetailView(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def patch(self, request, alumno_id: int):
+        try:
+            alumno = Alumno.objects.get(id=alumno_id)
+        except Alumno.DoesNotExist:
+            return Response({"detail": "Alumno no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Campos editables
+        for field in ("nombre", "apellido", "dni", "email", "telefono", "direccion", "fecha_nacimiento"):
+            if field in request.data:
+                setattr(alumno, field, request.data[field])
+
+        if "carrera_principal" in request.data:
+            carrera_id = request.data.get("carrera_principal")
+            if carrera_id:
+                try:
+                    carrera = Carrera.objects.get(id=carrera_id)
+                    alumno.carrera_principal = carrera
+                except Carrera.DoesNotExist:
+                    return Response({"detail": "Carrera no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                alumno.carrera_principal = None
+
+        alumno.save()
+        return Response(AlumnoSerializer(alumno).data)
+
+    def delete(self, request, alumno_id: int):
+        try:
+            alumno = Alumno.objects.get(id=alumno_id)
+        except Alumno.DoesNotExist:
+            return Response({"detail": "Alumno no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        alumno.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
 class AdminInscripciones(APIView):
     permission_classes = [IsAdminOrPreceptor]
@@ -396,7 +549,8 @@ class AdminInscripciones(APIView):
 
         if inscripciones:
             return Response(InscripcionCarreraSerializer(inscripciones, many=True).data)
-        
+        else :
+            return Response([], status=status.HTTP_200_OK)
 class AdminUsuariosPendientesView(APIView):
     permission_classes = [IsAdminOrPreceptor]
 
@@ -422,18 +576,10 @@ class AdminUsuariosAprobarView(APIView):
         if not user:
             username = getattr(registro, "dni", None) or getattr(registro, "email", None) or f"user_{registro.id}"
             user = User.objects.create(username=username, email=getattr(registro, "email", ""))
-            # Intentar asignar contraseña si está disponible en el registro (opcional)
-            pwd = getattr(registro, "password", None) or getattr(registro, "password1", None)
-            if pwd:
-                user.set_password(pwd)
-            else:
-                user.set_unusable_password()
-            user.save()
-            # Si el modelo RegistroUsuario tiene campo user, intentar ligarlo
-            try:
-                registro.user = user
-            except Exception:
-                pass
+            # Contraseña inicial: DNI
+            user.set_password(registro.dni)
+            registro.user = user
+            registro.save()
 
         # Asignar permisos según rol solicitado
         user.is_active = True
@@ -443,38 +589,36 @@ class AdminUsuariosAprobarView(APIView):
             user.is_staff = False
         user.save()
 
-        # Crear perfil si hace falta
         try:
-            if registro.rol_solicitado == "ALUMNO":
-                if not hasattr(user, "alumno") or user.alumno is None:
-                    Alumno.objects.create(
-                        user=user,
-                        nombre=registro.nombre,
-                        apellido=registro.apellido,
-                        dni=registro.dni,
-                        email=registro.email or "",
-                        telefono=getattr(registro, "telefono", None),
-                        direccion=getattr(registro, "direccion", None),
-                        carrera_principal=None,
-                    )
-            elif registro.rol_solicitado == "PERSONAL":
-                if not hasattr(user, "personal") or user.personal is None:
-                    Personal.objects.create(
-                        user=user,
-                        nombre=registro.nombre,
-                        apellido=registro.apellido,
-                        dni=registro.dni,
-                        email=registro.email or "",
-                        telefono=getattr(registro, "telefono", None),
-                        direccion=getattr(registro, "direccion", None),
-                        cargo=getattr(registro, "cargo_solicitado", "") or "",
-                    )
+            registro.aprobar(request.user)
         except Exception as e:
             # Log opcional y continuar; no queremos dejar el registro sin marcar
             import logging
             logging.getLogger(__name__).warning(f"Error creando perfil al aprobar usuario {registro.id}: {e}")
-
-        registro.estado = "APROBADO"
-        registro.save()
+            return Response({"detail": f"Error al aprobar el usuario: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"ok": True, "mensaje": "Usuario aprobado"}, status=status.HTTP_200_OK)
+
+class AdminUsuariosRechazarView(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def patch(self, request, user_id: int):
+        try:
+            registro = RegistroUsuario.objects.get(id=user_id)
+        except RegistroUsuario.DoesNotExist:
+            return Response({"detail": "Registro no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        if registro.estado != "PENDIENTE":
+            return Response({"detail": "El registro no está en estado PENDIENTE"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Marcar registro como rechazado. Si existe user asociado, mantener inactivo.
+        user = getattr(registro, "user", None)
+        if user:
+            user.is_active = False
+            user.is_staff = False
+            user.save()
+
+        registro.estado = "RECHAZADO"
+        registro.save()
+
+        return Response({"ok": True, "mensaje": "Usuario rechazado"}, status=status.HTTP_200_OK)

@@ -20,6 +20,11 @@ const Login = () => {
       const res = await loginDni(dni, password);
       toast({ title: "Bienvenido", description: "Inicio de sesión correcto" });
       console.log("Respuesta del login:", res);
+      if (res?.must_change_password) {
+        navigate("/cambiar-contrasena");
+        return;
+      }
+      
       if (res?.rol === "PERSONAL:ADMIN") {
         navigate("/admin");
       } else if (res?.rol === "ALUMNO") {
