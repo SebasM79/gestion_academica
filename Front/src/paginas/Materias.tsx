@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/componentes/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/componentes/ui/table";
 import { Button } from "@/componentes/ui/button";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Materias = () => {
   const navigate = useNavigate();
@@ -32,9 +34,15 @@ const Materias = () => {
   const payload = materiasQuery.data!;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <Card>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+        <Button variant="outline" asChild className="mb-4">
+            <Link to="/perfil">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+               Volver al perfil
+            </Link>
+            </Button>
+        <Card>           
           <CardHeader>
             <CardTitle>Materias</CardTitle>
           </CardHeader>
@@ -43,6 +51,7 @@ const Materias = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
+                  <TableHead>Nota</TableHead>
                   <TableHead>Carrera</TableHead>
                   <TableHead>Horario</TableHead>
                   <TableHead>Cupo</TableHead>
@@ -54,6 +63,7 @@ const Materias = () => {
                 {(payload.data as any[]).map((m: any) => (
                   <TableRow key={m.id}>
                     <TableCell>{m.nombre}</TableCell>
+                    <TableCell>{m.nota?.nota || "-"}</TableCell>
                     <TableCell>{m.carrera?.nombre}</TableCell>
                     <TableCell>{m.horario || "-"}</TableCell>
                     <TableCell>{m.cupo}</TableCell>

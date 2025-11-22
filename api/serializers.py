@@ -24,6 +24,13 @@ class MateriaSerializer(serializers.ModelSerializer):
         fields = ["id", "nombre", "horario", "cupo", "carrera"]
 
 
+class MateriaWithCountSerializer(MateriaSerializer):
+    total_alumnos = serializers.IntegerField(read_only=True)
+
+    class Meta(MateriaSerializer.Meta):
+        fields = MateriaSerializer.Meta.fields + ["total_alumnos"]
+
+
 class AlumnoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alumno
@@ -56,6 +63,17 @@ class NotaSerializer(serializers.ModelSerializer):
             "observaciones",
         ]
         read_only_fields = ["profesor", "fecha_creacion", "fecha_modificacion"]
+
+
+class NotaLiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Nota
+        fields = [
+            "id",
+            "nota",
+            "observaciones",
+            "fecha_modificacion",
+        ]
 
 
 class NotaUpsertSerializer(serializers.ModelSerializer):

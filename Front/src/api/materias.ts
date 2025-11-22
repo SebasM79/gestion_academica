@@ -44,6 +44,18 @@ export type NotaLite = {
   fecha_modificacion: string;
 };
 
+// Nota completa para vistas de alumno (incluye la materia relacionada)
+export type NotaAlumno = {
+  id: number;
+  alumno: number;
+  materia: Materia;
+  profesor: number | null;
+  nota: number;
+  fecha_creacion: string;
+  fecha_modificacion: string;
+  observaciones?: string;
+};
+
 export type AlumnoConNota = {
   alumno: Alumno;
   nota: NotaLite | null;
@@ -55,4 +67,19 @@ export async function fetchDocenteAlumnosNotas(materiaId: number) {
 
 export async function upsertNota(payload: { alumno: number; materia: number; nota: number; observaciones?: string }) {
   return apiPost('/docente/notas/', payload);
+}
+
+export type AlumnoMateriaNota = {
+  alumno: Alumno;
+  materia: Materia;
+  nota: NotaLite | null;
+};
+
+export async function fetchAdminAlumnosNotas() {
+  return apiFetch<AlumnoMateriaNota[]>(`/admin/alumnos-notas/`);
+}
+
+// Alumno: obtener sus propias notas con detalle de materia
+export async function fetchAlumnoNotas() {
+  return apiFetch<NotaAlumno[]>(`/alumnos/me/notas/`);
 }

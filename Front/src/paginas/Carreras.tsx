@@ -16,9 +16,9 @@ const Carreras = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <Button variant="outline" asChild className="mb-4">
-            <Link to="/">
+            <Link to="/perfil">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver al Inicio
+              Volver al perfil
             </Link>
           </Button>
           <h1 className="text-4xl font-bold text-foreground mb-2">Carreras Habilitadas</h1>

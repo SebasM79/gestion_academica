@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
+from typing import Any, Mapping, cast
+from django.core.exceptions import ObjectDoesNotExist
 
 from carreras.models import Carrera
 from materias.models import Materia
@@ -17,12 +19,15 @@ from personal.models import Personal, AsignacionDocente
 from .serializers import (
     CarreraSerializer,
     MateriaSerializer,
+    MateriaWithCountSerializer,
     AlumnoSerializer,
     NotaSerializer,
+    NotaLiteSerializer,
     NotaUpsertSerializer,
     PersonalSerializer,
 )
 from .permissions import IsAlumno, IsAdminOrPreceptor, IsDocente
+from django.db.models import Count
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -47,8 +52,9 @@ class LoginView(APIView):
         return super().dispatch(*args, **kwargs)
 
     def post(self, request):
-        username = request.data.get("dni") or request.data.get("username")
-        password = request.data.get("password")
+        data_map: Mapping[str, Any] = cast(Mapping[str, Any], getattr(request, "data", {}) or {})
+        username = data_map.get("dni") or data_map.get("username")
+        password = data_map.get("password")
         if not username or not password:
             return Response({"detail": "dni y password son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -65,17 +71,17 @@ class LoginView(APIView):
             user_check = None
             try:
                 # Intentar buscar por username directo
-                user_check = User.objects.get(username=username)
-            except User.DoesNotExist:
+                user_check = User.objects.get(username=username)  # type: ignore[attr-defined]
+            except ObjectDoesNotExist:
                 # Intentar buscar por DNI a través de Alumno/Personal
                 try:
                     from alumnos.models import Alumno
-                    alumno = Alumno.objects.get(dni=username)
+                    alumno = Alumno.objects.get(dni=username)  # type: ignore[attr-defined]
                     user_check = alumno.user
                 except:
                     try:
                         from personal.models import Personal
-                        personal = Personal.objects.get(dni=username)
+                        personal = Personal.objects.get(dni=username)  # type: ignore[attr-defined]
                         user_check = personal.user
                     except:
                         pass
@@ -151,8 +157,9 @@ class RegistroUsuarioView(APIView):
         # Convertir los datos de la request a formato de formulario Django
         # request.data en DRF puede ser un QueryDict o dict, necesitamos asegurar que sea un dict plano
         # Si viene como lista (ej: {"field": ["value"]}), tomamos el primer elemento
-        form_data = {}
-        for key, value in request.data.items():
+        form_data: dict[str, Any] = {}
+        raw_data: Mapping[str, Any] = cast(Mapping[str, Any], getattr(request, "data", {}) or {})
+        for key, value in raw_data.items():
             if isinstance(value, list) and len(value) > 0:
                 form_data[key] = value[0]
             else:
@@ -177,16 +184,20 @@ class RegistroUsuarioView(APIView):
                 )
         
         # Convertir errores del formulario Django a formato DRF
-        errors = {}
-        for field, field_errors in form.errors.items():
+        errors: dict[str, Any] = {}
+        form_errors: Mapping[str, Any] = cast(Mapping[str, Any], getattr(form, "errors", {}) or {})
+        for field, field_errors in form_errors.items():
             if isinstance(field_errors, list):
                 errors[field] = field_errors
             else:
                 errors[field] = [str(field_errors)]
         
         # También incluir errores no relacionados con campos
-        if form.non_field_errors():
-            errors['non_field_errors'] = form.non_field_errors()
+        nfe = getattr(form, "non_field_errors", None)
+        if callable(nfe):
+            nfe_list = nfe()
+            if nfe_list:
+                errors['non_field_errors'] = nfe_list
         
         return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -196,7 +207,7 @@ class CarrerasListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        carreras = Carrera.objects.all()
+        carreras = Carrera.objects.all()  # type: ignore[attr-defined]
         return Response(CarreraSerializer(carreras, many=True).data)
 
 
@@ -204,7 +215,7 @@ class MateriasByCarreraView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, carrera_id: int):
-        materias = Materia.objects.filter(carrera_id=carrera_id)
+        materias = Materia.objects.filter(carrera_id=carrera_id)  # type: ignore[attr-defined]
         return Response(MateriaSerializer(materias, many=True).data)
 
 
@@ -220,7 +231,7 @@ class AlumnoMisNotasView(APIView):
     permission_classes = [IsAlumno]
 
     def get(self, request):
-        notas = Nota.objects.filter(alumno=request.user.alumno).select_related("materia", "profesor")
+        notas = Nota.objects.filter(alumno=request.user.alumno).select_related("materia", "profesor")  # type: ignore[attr-defined]
         return Response(NotaSerializer(notas, many=True).data)
 
 
@@ -231,9 +242,9 @@ class AlumnoMisMateriasView(APIView):
         # Por ahora, materias de su carrera_principal (no hay inscripción por materia)
         alumno = request.user.alumno
         if alumno.carrera_principal_id:
-            materias = Materia.objects.filter(carrera_id=alumno.carrera_principal_id)
+            materias = Materia.objects.filter(carrera_id=alumno.carrera_principal_id)  # type: ignore[attr-defined]
         else:
-            materias = Materia.objects.none()
+            materias = Materia.objects.none()  # type: ignore[attr-defined]
         return Response(MateriaSerializer(materias, many=True).data)
 
 
@@ -243,10 +254,10 @@ class AdminStatsView(APIView):
 
     def get(self, request):
         return Response({
-            "alumnos": Alumno.objects.count(),
-            "carreras": Carrera.objects.count(),
-            "materias": Materia.objects.count(),
-            "notas": Nota.objects.count(),
+            "alumnos": Alumno.objects.count(),  # type: ignore[attr-defined]
+            "carreras": Carrera.objects.count(),  # type: ignore[attr-defined]
+            "materias": Materia.objects.count(),  # type: ignore[attr-defined]
+            "notas": Nota.objects.count(),  # type: ignore[attr-defined]
         })
 
 
@@ -256,7 +267,7 @@ class DocenteMateriasView(APIView):
 
     def get(self, request):
         docente = request.user.personal
-        materias = Materia.objects.filter(docentes__docente=docente).distinct()
+        materias = Materia.objects.filter(docentes__docente=docente).distinct()  # type: ignore[attr-defined]
         return Response(MateriaSerializer(materias, many=True).data)
 
 
@@ -266,12 +277,18 @@ class DocenteAlumnosPorMateriaView(APIView):
     def get(self, request, materia_id: int):
         docente = request.user.personal
         # Verificar asignación
-        if not AsignacionDocente.objects.filter(docente=docente, materia_id=materia_id).exists():
+        if not AsignacionDocente.objects.filter(docente=docente, materia_id=materia_id).exists():  # type: ignore[attr-defined]
             return Response({"detail": "No asignado a la materia"}, status=status.HTTP_403_FORBIDDEN)
-        # Sin inscripción por materia, listamos alumnos con Nota existente para esta materia
-        notas = Nota.objects.filter(materia_id=materia_id).select_related("alumno")
-        alumnos = [n.alumno for n in notas]
-        return Response(AlumnoSerializer(alumnos, many=True).data)
+        # Sin inscripción por materia, devolvemos alumnos con Nota existente y su nota actual
+        notas = Nota.objects.filter(materia_id=materia_id).select_related("alumno")  # type: ignore[attr-defined]
+        data = [
+            {
+                "alumno": AlumnoSerializer(n.alumno).data,
+                "nota": NotaLiteSerializer(n).data,
+            }
+            for n in notas
+        ]
+        return Response(data)
 
 
 class DocenteNotaUpsertView(APIView):
@@ -282,13 +299,14 @@ class DocenteNotaUpsertView(APIView):
         docente = request.user.personal
         serializer = NotaUpsertSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        alumno = serializer.validated_data["alumno"]
-        materia = serializer.validated_data["materia"]
-        if not AsignacionDocente.objects.filter(docente=docente, materia=materia).exists():
+        vd: dict[str, Any] = cast(dict[str, Any], serializer.validated_data)
+        alumno = vd["alumno"]
+        materia = vd["materia"]
+        if not AsignacionDocente.objects.filter(docente=docente, materia=materia).exists():  # type: ignore[attr-defined]
             return Response({"detail": "No asignado a la materia"}, status=status.HTTP_403_FORBIDDEN)
-        nota_val = serializer.validated_data["nota"]
-        obs = serializer.validated_data.get("observaciones", "")
-        nota_obj, _created = Nota.objects.update_or_create(
+        nota_val = vd["nota"]
+        obs = vd.get("observaciones", "")
+        nota_obj, _created = Nota.objects.update_or_create(  # type: ignore[attr-defined]
             alumno=alumno,
             materia=materia,
             defaults={
@@ -307,18 +325,19 @@ class DocenteMateriaCreateView(APIView):
     def post(self, request):
         # Crea una materia y asigna automáticamente al docente actual
         docente = request.user.personal
-        nombre = request.data.get("nombre")
-        horario = request.data.get("horario", "")
-        cupo = request.data.get("cupo", 30)
-        carrera_id = request.data.get("carrera")
+        data_map: Mapping[str, Any] = cast(Mapping[str, Any], getattr(request, "data", {}) or {})
+        nombre = data_map.get("nombre")
+        horario = data_map.get("horario", "")
+        cupo = data_map.get("cupo", 30)
+        carrera_id = data_map.get("carrera")
         if not (nombre and carrera_id):
             return Response({"detail": "nombre y carrera son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            carrera = Carrera.objects.get(id=carrera_id)
-        except Carrera.DoesNotExist:
+            carrera = Carrera.objects.get(id=carrera_id)  # type: ignore[attr-defined]
+        except ObjectDoesNotExist:
             return Response({"detail": "Carrera no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
-        materia = Materia.objects.create(nombre=nombre, horario=horario, cupo=cupo, carrera=carrera)
-        AsignacionDocente.objects.create(docente=docente, materia=materia)
+        materia = Materia.objects.create(nombre=nombre, horario=horario, cupo=cupo, carrera=carrera)  # type: ignore[attr-defined]
+        AsignacionDocente.objects.create(docente=docente, materia=materia)  # type: ignore[attr-defined]
         return Response(MateriaSerializer(materia).data, status=status.HTTP_201_CREATED)
 
 
@@ -328,10 +347,10 @@ class DocenteMateriaUpdateDeleteView(APIView):
     def patch(self, request, materia_id: int):
         docente = request.user.personal
         try:
-            materia = Materia.objects.get(id=materia_id)
-        except Materia.DoesNotExist:
+            materia = Materia.objects.get(id=materia_id)  # type: ignore[attr-defined]
+        except ObjectDoesNotExist:
             return Response({"detail": "Materia no encontrada"}, status=status.HTTP_404_NOT_FOUND)
-        if not AsignacionDocente.objects.filter(docente=docente, materia=materia).exists():
+        if not AsignacionDocente.objects.filter(docente=docente, materia=materia).exists():  # type: ignore[attr-defined]
             return Response({"detail": "No asignado a la materia"}, status=status.HTTP_403_FORBIDDEN)
         # Permitir editar nombre/horario/cupo; no cambiamos carrera para simplificar
         for field in ("nombre", "horario", "cupo"):
@@ -343,10 +362,45 @@ class DocenteMateriaUpdateDeleteView(APIView):
     def delete(self, request, materia_id: int):
         docente = request.user.personal
         try:
-            materia = Materia.objects.get(id=materia_id)
-        except Materia.DoesNotExist:
+            materia = Materia.objects.get(id=materia_id)  # type: ignore[attr-defined]
+        except ObjectDoesNotExist:
             return Response({"detail": "Materia no encontrada"}, status=status.HTTP_404_NOT_FOUND)
-        if not AsignacionDocente.objects.filter(docente=docente, materia=materia).exists():
+        if not AsignacionDocente.objects.filter(docente=docente, materia=materia).exists():  # type: ignore[attr-defined]
             return Response({"detail": "No asignado a la materia"}, status=status.HTTP_403_FORBIDDEN)
         materia.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AdminMateriasWithCountView(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def get(self, request):
+        # total_alumnos = cantidad de Notas por materia (alumnos con nota cargada)
+        materias = (
+            Materia.objects  # type: ignore[attr-defined]
+            .annotate(total_alumnos=Count("notas", distinct=True))
+            .select_related("carrera")
+        )
+        return Response(MateriaWithCountSerializer(materias, many=True).data)
+
+
+# Admin/Preceptor: listado de alumnos con su materia y nota
+class PreceptorAlumnosNotasView(APIView):
+    permission_classes = [IsAdminOrPreceptor]
+
+    def get(self, request):
+        # Listar todas las notas con alumno y materia relacionados
+        qs = (
+            Nota.objects  # type: ignore[attr-defined]
+            .select_related("alumno", "materia", "profesor")
+            .order_by("alumno__apellido", "alumno__nombre", "materia__nombre")
+        )
+        data = [
+            {
+                "alumno": AlumnoSerializer(n.alumno).data,
+                "materia": MateriaSerializer(n.materia).data,
+                "nota": NotaLiteSerializer(n).data,
+            }
+            for n in qs
+        ]
+        return Response(data)
