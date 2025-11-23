@@ -18,9 +18,6 @@ import GestionAlumnos from "@/paginas/admin/GestionAlumnos";
 
 import AlumnoDashboard from "@/paginas/AlumnoDashboard";
 
-import PreceptorDashboard from "./paginas/preceptor/PreceptorDashboard";
-import PreceptorAlumnoDetalle from "./paginas/preceptor/PreceptorAlumnoDetalle";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -42,9 +39,6 @@ const App = () => (
           <Route path="/admin/carreras" element={<GestionCarreras />} />
           <Route path="/admin/materias" element={<GestionMaterias />} />
           <Route path="/admin/alumnos" element={<GestionAlumnos />} />
-
-          <Route path="/preceptor" element={<PreceptorDashboard />} />
-          <Route path="/preceptor/alumnos/:alumnoId" element={<PreceptorAlumnoDetalle />} />
 
           <Route path="/alumno" element={<AlumnoDashboard />} />
 
