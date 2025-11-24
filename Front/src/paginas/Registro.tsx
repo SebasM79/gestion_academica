@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useToast } from "@/ganchos/use-toast";
-import { registroUsuario } from "@/api/auth";
+import { registroUsuario, type RegistroPayload } from "@/api/auth";
 
 const Registro = () => {
   const [formData, setFormData] = useState({
@@ -43,11 +43,22 @@ const Registro = () => {
     }
     try {
       // Preparar datos para enviar, asegurando que cargo_solicitado sea string vacío si no se seleccionó
-      const datosEnvio = {
-        ...formData,
-        cargo_solicitado: formData.rol_solicitado === "ALUMNO" ? "" : (formData.cargo_solicitado || ""),
-        telefono: formData.telefono || "",
-        direccion: formData.direccion || "",
+      const cargo: RegistroPayload["cargo_solicitado"] =
+        formData.rol_solicitado === "ALUMNO"
+          ? ""
+          : ((formData.cargo_solicitado ?? "") as RegistroPayload["cargo_solicitado"]);
+
+      const datosEnvio: RegistroPayload = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        dni: formData.dni,
+        email: formData.email,
+        telefono: formData.telefono ?? "",
+        direccion: formData.direccion ?? "",
+        rol_solicitado: formData.rol_solicitado,
+        cargo_solicitado: cargo,
+        password1: formData.password1,
+        password2: formData.password2,
       };
       
       await registroUsuario(datosEnvio);
