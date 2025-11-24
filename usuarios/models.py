@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from typing import cast
 
 class RegistroUsuario(models.Model):
     ESTADO_CHOICES = [
@@ -69,8 +70,9 @@ class RegistroUsuario(models.Model):
         if self.estado != "PENDIENTE":
             return
         # Activar usuario
-        self.user.is_active = True
-        self.user.save()
+        user_obj = cast(User, self.user)
+        user_obj.is_active = True  # type: ignore[assignment]
+        user_obj.save()
         # Crear entidad según rol
         if self.rol_solicitado == "ALUMNO":
             alumno, _ = Alumno.objects.get_or_create(
@@ -98,7 +100,7 @@ class RegistroUsuario(models.Model):
                 )
         elif self.rol_solicitado == "PERSONAL":
             cargo = self.cargo_solicitado or "ADMIN"
-            Personal.objects.get_or_create(
+            Personal.objects.get_or_create(  # type: ignore[attr-defined]
                 user=self.user,
                 defaults={
                     "nombre": self.nombre,
@@ -125,6 +127,7 @@ class RegistroUsuario(models.Model):
             self.observaciones_admin = observaciones
         # Mantener user inactivo en caso de rechazo
         if self.user:
-            self.user.is_active = False
-            self.user.save()
+            user_obj2 = cast(User, self.user)
+            user_obj2.is_active = False  # type: ignore[assignment]
+            user_obj2.save()
         self.save()

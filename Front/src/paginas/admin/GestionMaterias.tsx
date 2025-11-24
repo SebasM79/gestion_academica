@@ -6,8 +6,7 @@ import { Label } from "@/componentes/ui/label";
 import { Select } from "@/componentes/ui/select";
 import { useToast } from "@/ganchos/use-toast";
 import { fetchCarreras } from "@/api/catalogo";
-import { fetchAllMaterias } from "@/api/admin";
-import { createMateria, updateMateria, deleteMateria } from "@/api/admin";
+import { createMateria, updateMateria, deleteMateria, fetchAllMaterias, fetchAllDocentes, Docente } from "@/api/admin";
 import { Trash2, Edit2, Plus, X, Loader, ArrowLeftFromLine } from "lucide-react";
 
 type Carrera = { id: number; nombre: string; duracion_anios?: number; descripcion?: string };
@@ -16,14 +15,16 @@ type Materia = { id: number; nombre: string; horario: string; cupo: number; carr
 const GestionMaterias = () => {
   const [materias, setMaterias] = useState<Materia[]>([]);
   const [carreras, setCarreras] = useState<Carrera[]>([]);
+  const [docentes, setDocentes] = useState<Docente[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<{ nombre: string; horario: string; cupo: number; carrera?: number }>({
+  const [formData, setFormData] = useState<{ nombre: string; horario: string; cupo: number; carrera?: number , docente?: number}>({
     nombre: "",
     horario: "",
     cupo: 30,
     carrera: undefined,
+    docente: undefined,
   });
   const { toast } = useToast();
 
@@ -34,9 +35,10 @@ const GestionMaterias = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [mRes, cRes] = await Promise.all([fetchAllMaterias(), fetchCarreras()]);
+      const [mRes, cRes, dRes] = await Promise.all([fetchAllMaterias(), fetchCarreras(), fetchAllDocentes()]);
       if (mRes) setMaterias(mRes);
       if (cRes) setCarreras(cRes);
+      if (dRes) setDocentes(dRes);
     } catch (err) {
       toast({ title: "Error", description: "No se pudieron cargar materias o carreras", variant: "destructive" });
     } finally {
@@ -48,7 +50,7 @@ const GestionMaterias = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "cupo" ? parseInt(value || "0") : name === "carrera" ? (value ? parseInt(value) : undefined) : value,
+      [name]: name === "cupo" ? parseInt(value || "0") : name === "carrera" || name === "docente" ? (value ? parseInt(value) : undefined) : value,
     }));
   };
 
@@ -70,7 +72,7 @@ const GestionMaterias = () => {
       }
       setShowForm(false);
       setEditingId(null);
-      setFormData({ nombre: "", horario: "", cupo: 30, carrera: undefined });
+      setFormData({ nombre: "", horario: "", cupo: 30, carrera: undefined, docente: undefined });
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "No se pudo guardar la materia", variant: "destructive" });
     }
@@ -78,7 +80,7 @@ const GestionMaterias = () => {
 
   const handleEdit = (m: Materia) => {
     setEditingId(m.id);
-    setFormData({ nombre: m.nombre, horario: m.horario, cupo: m.cupo, carrera: m.carrera?.id });
+    setFormData({ nombre: m.nombre, horario: m.horario, cupo: m.cupo, carrera: m.carrera?.id , docente: undefined});
     setShowForm(true);
   };
 
@@ -156,6 +158,14 @@ const GestionMaterias = () => {
                   <select id="carrera" name="carrera" value={formData.carrera ?? ""} onChange={handleInput} className="w-full px-3 py-2 border rounded-md bg-background">
                     <option value="">-- Seleccione carrera --</option>
                     {carreras.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                  </select>
+                </div>
+
+                  <div>
+                  <Label htmlFor="docente">Docente Asignado</Label>
+                  <select id="docente" name="docente" value={formData.docente ?? ""} onChange={handleInput} className="w-full px-3 py-2 border rounded-md bg-background" disabled= {editingId ? true : false}>
+                    <option value="">-- Sin asignar --</option>
+                    {docentes.map(d => <option key={d.id} value={d.id}>{d.nombre} {d.apellido}</option>)}
                   </select>
                 </div>
 

@@ -16,7 +16,8 @@ import GestionCarreras from "@/paginas/admin/GestionCarrera";
 import GestionMaterias from "@/paginas/admin/GestionMaterias";
 import GestionAlumnos from "@/paginas/admin/GestionAlumnos";
 
-import AlumnoDashboard from "@/paginas/AlumnoDashboard";
+import Materias from "@/paginas/Materias";
+import MateriaDocente from "@/paginas/MateriaDocente";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/carreras" element={<Carreras />} />
+          <Route path="/materias" element={<Materias />} />
+          <Route path="/materias/:id" element={<MateriaDocente />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cambiar-contrasena" element={<ChangePassword />} />
 
@@ -39,8 +42,6 @@ const App = () => (
           <Route path="/admin/carreras" element={<GestionCarreras />} />
           <Route path="/admin/materias" element={<GestionMaterias />} />
           <Route path="/admin/alumnos" element={<GestionAlumnos />} />
-
-          <Route path="/alumno" element={<AlumnoDashboard />} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

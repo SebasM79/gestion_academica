@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from carreras.models import Carrera
 from materias.models import Materia
-from alumnos.models import Alumno
+from alumnos.models import Alumno, InscripcionAlumno
 from notas.models import Nota
 from personal.models import Personal
 from usuarios.models import RegistroUsuario
@@ -37,6 +37,13 @@ class PersonalSerializer(serializers.ModelSerializer):
             "direccion",
             "cargo",
         ]
+
+
+class MateriaWithCountSerializer(MateriaSerializer):
+    total_alumnos = serializers.IntegerField(read_only=True)
+
+    class Meta(MateriaSerializer.Meta):
+        fields = MateriaSerializer.Meta.fields + ["total_alumnos"]
 
 
 class AlumnoSerializer(serializers.ModelSerializer):
@@ -89,10 +96,36 @@ class NotaSerializer(serializers.ModelSerializer):
         read_only_fields = ["profesor", "fecha_creacion", "fecha_modificacion"]
 
 
-class NotaUpsertSerializer(serializers.ModelSerializer):
+class NotaLiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Nota
-        fields = ["alumno", "materia", "nota", "observaciones"]
+        fields = [
+            "id",
+            "nota",
+            "observaciones",
+            "fecha_modificacion",
+        ]
+
+
+class NotaUpsertSerializer(serializers.Serializer):
+    alumno = serializers.IntegerField(required=True)
+    materia = serializers.IntegerField(required=True)
+    nota = serializers.FloatField(required=True, min_value=0, max_value=10)
+    observaciones = serializers.CharField(required=False, allow_blank=True, default="")
+
+    def validate_nota(self, value):
+        if not (0 <= value <= 10):
+            raise serializers.ValidationError("La nota debe estar entre 0 y 10")
+        return value
+
+    def validate(self, attrs):
+        alumno_id = attrs.get("alumno")
+        materia_id = attrs.get("materia")
+        
+        if not alumno_id or not materia_id:
+            raise serializers.ValidationError("alumno y materia son requeridos")
+        
+        return attrs
 
 class RegistroUsuarioSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(
@@ -252,4 +285,18 @@ class UsuariosPendientesSerializer(serializers.ModelSerializer):
             "observaciones_admin",
             "aprobado_por_id",
             "user_id",
+        ]
+
+class InscripcionAlumnoSerializer(serializers.ModelSerializer):
+    alumno = AlumnoSerializer(read_only=True)
+    materia = MateriaSerializer(read_only=True)
+
+    class Meta:
+        model = InscripcionAlumno
+        fields = [
+            "id",
+            "alumno",
+            "materia",
+            "fecha_inscripcion",
+            "activa",
         ]

@@ -27,6 +27,13 @@ export type Alumno = {
     fecha_nacimiento: Date | null;
     carrera_principal: Carrera | null;
 }
+export type Docente = {
+    id: number;
+    nombre: string;
+    apellido: string;
+    cargo: string;
+}
+//ENDPOINTS STATS ADMIN
 // Obtener estadísticas generales para el dashboard admin
 export async function fetchAdminStats() {
     return apiFetch<{ totalUsuarios: number; totalCarreras: number; totalMaterias: number; totalAlumnos: number }>('/admin/stats/');
@@ -45,14 +52,28 @@ export async function fetchAllAlumnos() {
     return apiFetch<Alumno[]>('/admin/alumnos/');
 }
 
+// Actualizar alumno 
+export async function updateAlumno(alumnoId: number, data: Partial<Alumno>) {
+    return apiPatch<Alumno>(`/admin/alumnos/${alumnoId}`, data);
+}
+
+// Eliminar alumno
+export async function deleteAlumno(alumnoId: number) {
+    return apiDelete<void>(`/admin/alumnos/${alumnoId}`);
+}
+
 //Obtener materias y notas de un alumno
 export async function fetchAlumnoMateriasNotas(alumnoId: number) {
     return apiFetch<any[]>(`/preceptor/alumnos/${alumnoId}/materias-notas/`);
 }
+
+//ENDPOINTS INSCRIPCIONES
 //Obtener todas las inscripciones
 export async function fetchAllInscripciones() {
     return apiFetch<any[]>('/admin/inscripciones/');
 }
+
+//ENDPOINTS USUARIOS
 //Obtener todos los usuarios pendientes
 export async function fetchPendingUsers() {
     return apiFetch<any[]>('/admin/usuarios/pendientes/');
@@ -67,6 +88,7 @@ export async function rejectPendingUser(userId: number) {
     return apiPatch<any>(`/admin/usuarios/pendientes/${userId}/rechazar/`, {});
 }
 
+//ENDPOINTS CARRERAS
 /**Crear nueva carrera*/
 export async function createCarrera(data: { nombre: string; duracion_anios: number; descripcion: string }) {
   return apiPost<Carrera>('/admin/carreras', data);
@@ -82,6 +104,7 @@ export async function deleteCarrera(carreraId: number) {
   return apiDelete<{ ok: boolean }>(`/admin/carreras/${carreraId}`);
 }
 
+//ENDPOINTS MATERIAS
 // Crear materia (Admin)
 export async function createMateria(data: { nombre: string; horario?: string; cupo?: number; carrera: number }) {
     return apiPost<Materia>('/admin/materia', data);
@@ -97,12 +120,7 @@ export async function deleteMateria(materiaId: number) {
     return apiDelete<{ ok: boolean }>(`/admin/materia/${materiaId}`);
 }
 
-// Actualizar alumno 
-export async function updateAlumno(alumnoId: number, data: Partial<Alumno>) {
-    return apiPatch<Alumno>(`/admin/alumnos/${alumnoId}`, data);
-}
-
-// Eliminar alumno
-export async function deleteAlumno(alumnoId: number) {
-  return apiDelete<void>(`/admin/alumnos/${alumnoId}`);
+//ENDPOINTS DOCENTES
+export async function fetchAllDocentes() {
+    return apiFetch<Docente[]>('/admin/docentes');
 }
