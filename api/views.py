@@ -560,6 +560,14 @@ class DocenteMateriaUpdateDeleteView(APIView):
         materia.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class DocenteByMateria(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, materia_id: int):
+        asignaciones = AsignacionDocente.objects.filter(materia_id=materia_id).select_related("docente")  # type: ignore[attr-defined]
+        docentes = [asig.docente for asig in asignaciones]
+        return Response(PersonalSerializer(docentes, many=True).data)
+    
 class AdminMaterias(APIView):
     permission_classes = [IsAdminOrPreceptor]
 

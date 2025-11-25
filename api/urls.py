@@ -46,6 +46,7 @@ urlpatterns = [
     # Docente
     path('docente/materias/', views.DocenteMateriasView.as_view(), name='docente_materias'),
     path('docente/materias/<int:materia_id>/alumnos/', views.DocenteAlumnosPorMateriaView.as_view(), name='docente_alumnos_por_materia'),
+    path("docente/materia/<int:materia_id>", views.DocenteByMateria.as_view(), name="docente_by_materia"),
     path('docente/notas/', views.DocenteNotaUpsertView.as_view(), name='docente_nota_upsert'),
     path('docente/materias/create/', views.DocenteMateriaCreateView.as_view(), name='docente_materia_create'),
     path('docente/materias/<int:materia_id>/', views.DocenteMateriaUpdateDeleteView.as_view(), name='docente_materia_update_delete'),

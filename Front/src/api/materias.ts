@@ -96,3 +96,7 @@ export async function darBajaAlumnoDeMateria(materiaId: number) {
 export async function fetchMateriasByCarrera(carreraId: number) {
   return apiFetch<Materia[]>(`/carreras/${carreraId}/materias/`);
 }
+
+export async function fetchDocentesByMateria(materiaId: number) {
+  return apiFetch(`/docente/materia/${materiaId}`);
+}

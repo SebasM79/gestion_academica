@@ -6,6 +6,7 @@ import { Label } from "@/componentes/ui/label";
 import { Select } from "@/componentes/ui/select";
 import { useToast } from "@/ganchos/use-toast";
 import { fetchCarreras } from "@/api/catalogo";
+import { fetchDocentesByMateria } from "@/api/materias";
 import { createMateria, updateMateria, deleteMateria, fetchAllMaterias, fetchAllDocentes, Docente } from "@/api/admin";
 import { Trash2, Edit2, Plus, X, Loader, ArrowLeftFromLine } from "lucide-react";
 
@@ -78,9 +79,10 @@ const GestionMaterias = () => {
     }
   };
 
-  const handleEdit = (m: Materia) => {
+  const handleEdit = async (m: Materia) => {
+    const docente = await fetchDocentesByMateria(m.id);
     setEditingId(m.id);
-    setFormData({ nombre: m.nombre, horario: m.horario, cupo: m.cupo, carrera: m.carrera?.id , docente: undefined});
+    setFormData({ nombre: m.nombre, horario: m.horario, cupo: m.cupo, carrera: m.carrera?.id, docente: docente[0]?.id});
     setShowForm(true);
   };
 

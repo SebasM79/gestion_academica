@@ -18,7 +18,6 @@ type Alumno = {
   email?: string;
   telefono?: string | null;
   direccion?: string | null;
-  fecha_nacimiento?: string | Date | null;
   carrera_principal?: Carrera | null;
 };
 
@@ -35,7 +34,6 @@ const GestionAlumnos = () => {
     email: "",
     telefono: "",
     direccion: "",
-    fecha_nacimiento: "",
     carrera_principal: undefined,
   });
   const { toast } = useToast();
@@ -80,7 +78,6 @@ const GestionAlumnos = () => {
           email: formData.email,
           telefono: formData.telefono,
           direccion: formData.direccion,
-          fecha_nacimiento: formData.fecha_nacimiento ? new Date(formData.fecha_nacimiento) : null,
           carrera_principal: (formData.carrera_principal as any) ?? null,
         });
         setAlumnos(prev => prev.map(a => a.id === editingId ? updated : a));
@@ -88,7 +85,7 @@ const GestionAlumnos = () => {
       }
       setShowForm(false);
       setEditingId(null);
-      setFormData({ nombre: "", apellido: "", dni: "", email: "", telefono: "", direccion: "", fecha_nacimiento: "", carrera_principal: undefined });
+      setFormData({ nombre: "", apellido: "", dni: "", email: "", telefono: "", direccion: "", carrera_principal: undefined });
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "No se pudo guardar el alumno", variant: "destructive" });
     }
@@ -104,7 +101,6 @@ const GestionAlumnos = () => {
       email: a.email ?? "",
       telefono: a.telefono ?? "",
       direccion: a.direccion ?? "",
-      fecha_nacimiento: a.fecha_nacimiento ? format(new Date(a.fecha_nacimiento), "yyyy-MM-dd") : "",
       carrera_principal: a.carrera_principal ? a.carrera_principal.id : null,
     });
     setShowForm(true);
@@ -188,23 +184,6 @@ const GestionAlumnos = () => {
                     <Label htmlFor="telefono">Teléfono</Label>
                     <Input id="telefono" name="telefono" value={formData.telefono ?? ""} onChange={handleInput} />
                   </div>
-                  <div>
-                    <Label htmlFor="fecha_nacimiento">Fecha Nac.</Label>
-                      <Input
-                        id="fecha_nacimiento"
-                        name="fecha_nacimiento"
-                        type="date"
-                        value={
-                          typeof formData.fecha_nacimiento === "string"
-                            ? formData.fecha_nacimiento
-                            : formData.fecha_nacimiento
-                            ? format(new Date(formData.fecha_nacimiento), "yyyy-MM-dd")
-                            : ""
-                        }
-                        onChange={handleInput}
-                        readOnly={true}
-                      />
-                    </div>
                 </div>
 
                 <div>
