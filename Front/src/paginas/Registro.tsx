@@ -2,11 +2,14 @@ import { Button } from "@/componentes/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/componentes/ui/card";
 import { Input } from "@/componentes/ui/input";
 import { Label } from "@/componentes/ui/label";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/ganchos/use-toast";
-import { registroUsuario } from "@/api/auth";
+import { registroUsuario, type RegistroPayload } from "@/api/auth";
+import { fetchCarreras } from "@/api/catalogo";
+
+type Carrera = { id: number; nombre: string; };
 
 const Registro = () => {
   const [formData, setFormData] = useState({
@@ -18,40 +21,76 @@ const Registro = () => {
     direccion: "",
     rol_solicitado: "ALUMNO" as "ALUMNO" | "PERSONAL",
     cargo_solicitado: "" as "" | "ADMIN" | "DOCENTE" | "PRECEPTOR",
-    password1: "",
-    password2: "",
+    carrera_solicitada: null as number | null,
   });
+
+  const [carreras, setCarreras] = useState<Carrera[]>([]);
+  const [loadingCarreras, setLoadingCarreras] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    useEffect(() => {
+    const loadCarreras = async () => {
+      try {
+        setLoadingCarreras(true);
+        const data = await fetchCarreras();
+        setCarreras(data || []);
+      } catch (err) {
+        toast({ title: "Error", description: "No se pudieron cargar las carreras", variant: "destructive" });
+      } finally {
+        setLoadingCarreras(false);
+      }
+    };
+    loadCarreras();
+  }, [toast]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.id]: e.target.value,
+      [id]: id === "carrera_solicitada" || id === "rol_solicitado" || id === "cargo_solicitado" 
+        ? value 
+        : value,
     });
   };
 
   const handleRegistro = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password1 !== formData.password2) {
+    // Validaciones
+    if (formData.rol_solicitado === "ALUMNO" && !formData.carrera_solicitada) {
       toast({
-        title: "Error",
-        description: "Las contraseñas no coinciden",
+        title: "Validación",
+        description: "Debes seleccionar una carrera si te registras como alumno",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.rol_solicitado === "PERSONAL" && !formData.cargo_solicitado) {
+      toast({
+        title: "Validación",
+        description: "Debes seleccionar un cargo si te registras como personal",
         variant: "destructive",
       });
       return;
     }
     try {
       // Preparar datos para enviar, asegurando que cargo_solicitado sea string vacío si no se seleccionó
-      const datosEnvio = {
-        ...formData,
-        cargo_solicitado: formData.rol_solicitado === "ALUMNO" ? "" : (formData.cargo_solicitado || ""),
+      const datosEnvio : RegistroPayload = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        dni: formData.dni,
+        email: formData.email,
         telefono: formData.telefono || "",
         direccion: formData.direccion || "",
+        rol_solicitado: formData.rol_solicitado,
+        cargo_solicitado: formData.cargo_solicitado || "",
+        carrera_solicitada: formData.carrera_solicitada || null,
       };
       
       await registroUsuario(datosEnvio);
       toast({ title: "Registro enviado", description: "Un administrador revisará tu solicitud." });
+      console.log("Registro exitoso:", datosEnvio);
       navigate("/login");
     } catch (err: any) {
       // Si es un ApiError, usar el mensaje formateado
@@ -84,6 +123,7 @@ const Registro = () => {
             <CardDescription>Completa tus datos para registrarte</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Formulario */}
             <form onSubmit={handleRegistro} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -135,42 +175,63 @@ const Registro = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="rol_solicitado">Rol</Label>
-                  <select id="rol_solicitado" value={formData.rol_solicitado} onChange={(e) => setFormData({ ...formData, rol_solicitado: e.target.value as any })} className="border rounded h-10 px-3 w-full">
+                  <select id="rol_solicitado" value={formData.rol_solicitado} onChange={handleChange} className="border rounded h-10 px-3 w-full">
                     <option value="ALUMNO">Alumno</option>
                     <option value="PERSONAL">Personal</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cargo_solicitado">Cargo (si es Personal)</Label>
-                  <select id="cargo_solicitado" value={formData.cargo_solicitado} onChange={(e) => setFormData({ ...formData, cargo_solicitado: e.target.value as any })} className="border rounded h-10 px-3 w-full">
-                    <option value="">(N/A)</option>
-                    <option value="ADMIN">Administrativo</option>
-                    <option value="DOCENTE">Docente</option>
-                    <option value="PRECEPTOR">Preceptor</option>
-                  </select>
+                
+                {/* Campo de Carrera - Solo si es ALUMNO */}
+                {formData.rol_solicitado === "ALUMNO" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="carrera_solicitada">Carrera (Requerida)</Label>
+                    {loadingCarreras ? (
+                      <div className="flex items-center gap-2">
+                        <Loader className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">Cargando carreras...</span>
+                      </div>
+                    ) : (
+                      <select 
+                        id="carrera_solicitada" 
+                        value={formData.carrera_solicitada ?? ""} 
+                        onChange={(e) => setFormData({ ...formData, carrera_solicitada: e.target.value ? parseInt(e.target.value) : null })} 
+                        className="border rounded h-10 px-3 w-full bg-background"
+                        required={formData.rol_solicitado === "ALUMNO"}
+                      >
+                        <option value="">-- Selecciona una carrera --</option>
+                        {carreras.map(c => (
+                          <option key={c.id} value={c.id}>{c.nombre}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
+
+                {/* Campo de Cargo - Solo si es PERSONAL */}
+                {formData.rol_solicitado === "PERSONAL" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="cargo_solicitado">Cargo (Requerido)</Label>
+                    <select 
+                      id="cargo_solicitado" 
+                      value={formData.cargo_solicitado} 
+                      onChange={handleChange} 
+                      className="border rounded h-10 px-3 w-full bg-background"
+                      required={formData.rol_solicitado === "PERSONAL"}
+                    >
+                      <option value="">-- Selecciona un cargo --</option>
+                      <option value="ADMIN">Administrativo</option>
+                      <option value="DOCENTE">Docente</option>
+                      <option value="PRECEPTOR">Preceptor</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Nota sobre contraseña inicial */}
+                <div className="bg-accent/10 border border-accent/20 rounded p-3">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Nota:</strong> Tu contraseña inicial será tu DNI. Te pediremos cambiarla al primer inicio de sesión.
+                  </p>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password1}
-                  onChange={(e) => setFormData({ ...formData, password1: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={formData.password2}
-                  onChange={(e) => setFormData({ ...formData, password2: e.target.value })}
-                  required
-                />
               </div>
               <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
                 Registrarse

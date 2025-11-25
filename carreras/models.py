@@ -8,5 +8,6 @@ class Carrera(models.Model):
     class Meta:
         ordering = ["nombre"]
 
-    def __str__(self):
-        return self.nombre
+    def __str__(self) -> str:
+        # Aseguramos a Pyright que devolvemos un str, no el descriptor del campo
+        return str(self.nombre)

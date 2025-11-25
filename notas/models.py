@@ -4,6 +4,7 @@ from django.utils import timezone
 from alumnos.models import Alumno
 from materias.models import Materia
 from personal.models import Personal
+from decimal import Decimal
 
 class Nota(models.Model):
     alumno = models.ForeignKey(Alumno, on_delete=models.CASCADE, related_name="notas")
@@ -37,18 +38,19 @@ class Nota(models.Model):
         super().clean()
         
         # Validar que la nota esté en el rango correcto
-        if self.nota is not None and (self.nota < 1.00 or self.nota > 10.00):
+        if self.nota is not None and (self.nota < Decimal("1.00") or self.nota > Decimal("10.00")):
             raise ValidationError("La nota debe estar entre 1.00 y 10.00")
         
         # Validar que el profesor esté asignado a la materia
         if self.profesor and self.materia:
-            if not self.profesor.asignaciones.filter(materia=self.materia).exists():
+            prof: Personal = self.profesor  # type: ignore[assignment]
+            if not prof.asignaciones.filter(materia=self.materia).exists():  # type: ignore[attr-defined]
                 raise ValidationError(
                     f"El profesor {self.profesor} no está asignado a la materia {self.materia}"
                 )
         
         # Validar que el profesor tenga cargo DOCENTE
-        if self.profesor and self.profesor.cargo != "DOCENTE":
+        if self.profesor and self.profesor.cargo != "DOCENTE":  # type: ignore[attr-defined]
             raise ValidationError("Solo el personal con cargo DOCENTE puede asignar notas")
 
     def save(self, *args, **kwargs):
@@ -62,4 +64,4 @@ class Nota(models.Model):
     @property
     def esta_aprobado(self):
         """Retorna True si la nota es aprobatoria (>= 6.00)"""
-        return self.nota >= 6.00 if self.nota else False
+        return bool(self.nota is not None and self.nota >= Decimal("6.00"))

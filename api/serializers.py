@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from carreras.models import Carrera
 from materias.models import Materia
-from alumnos.models import Alumno
+from alumnos.models import Alumno, InscripcionAlumno
 from notas.models import Nota
 from personal.models import Personal
 from usuarios.models import RegistroUsuario
+from inscripciones.models import InscripcionCarrera
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -23,8 +24,30 @@ class MateriaSerializer(serializers.ModelSerializer):
         model = Materia
         fields = ["id", "nombre", "horario", "cupo", "carrera"]
 
+class PersonalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Personal
+        fields = [
+            "id",
+            "nombre",
+            "apellido",
+            "dni",
+            "email",
+            "telefono",
+            "direccion",
+            "cargo",
+        ]
+
+
+class MateriaWithCountSerializer(MateriaSerializer):
+    total_alumnos = serializers.IntegerField(read_only=True)
+
+    class Meta(MateriaSerializer.Meta):
+        fields = MateriaSerializer.Meta.fields + ["total_alumnos"]
+
 
 class AlumnoSerializer(serializers.ModelSerializer):
+    carrera_principal = CarreraSerializer(read_only=True)
     class Meta:
         model = Alumno
         fields = [
@@ -37,6 +60,21 @@ class AlumnoSerializer(serializers.ModelSerializer):
             "direccion",
             "fecha_nacimiento",
             "carrera_principal",
+        ]
+
+class InscripcionCarreraSerializer(serializers.ModelSerializer):
+    alumno = AlumnoSerializer(read_only=True)
+    carrera = CarreraSerializer(read_only=True)
+    responsable = PersonalSerializer(read_only=True)
+
+    class Meta:
+        model = InscripcionCarrera
+        fields = [
+            "id",
+            "alumno",
+            "carrera",
+            "responsable",
+            "fecha_inscripcion",
         ]
 
 
@@ -58,26 +96,36 @@ class NotaSerializer(serializers.ModelSerializer):
         read_only_fields = ["profesor", "fecha_creacion", "fecha_modificacion"]
 
 
-class NotaUpsertSerializer(serializers.ModelSerializer):
+class NotaLiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Nota
-        fields = ["alumno", "materia", "nota", "observaciones"]
-
-
-class PersonalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Personal
         fields = [
             "id",
-            "nombre",
-            "apellido",
-            "dni",
-            "email",
-            "telefono",
-            "direccion",
-            "cargo",
+            "nota",
+            "observaciones",
+            "fecha_modificacion",
         ]
 
+
+class NotaUpsertSerializer(serializers.Serializer):
+    alumno = serializers.IntegerField(required=True)
+    materia = serializers.IntegerField(required=True)
+    nota = serializers.FloatField(required=True, min_value=0, max_value=10)
+    observaciones = serializers.CharField(required=False, allow_blank=True, default="")
+
+    def validate_nota(self, value):
+        if not (0 <= value <= 10):
+            raise serializers.ValidationError("La nota debe estar entre 0 y 10")
+        return value
+
+    def validate(self, attrs):
+        alumno_id = attrs.get("alumno")
+        materia_id = attrs.get("materia")
+        
+        if not alumno_id or not materia_id:
+            raise serializers.ValidationError("alumno y materia son requeridos")
+        
+        return attrs
 
 class RegistroUsuarioSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(
@@ -217,3 +265,38 @@ class RegistroUsuarioSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"error": [f"Error al crear el registro: {error_msg}"]})
         
         return registro
+    
+class UsuariosPendientesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RegistroUsuario
+        fields = [
+            "id",
+            "nombre",
+            "apellido",
+            "dni",
+            "email",
+            "telefono",
+            "direccion",
+            "rol_solicitado",
+            "cargo_solicitado",
+            "estado",
+            "creado_en",
+            "aprobado_en",
+            "observaciones_admin",
+            "aprobado_por_id",
+            "user_id",
+        ]
+
+class InscripcionAlumnoSerializer(serializers.ModelSerializer):
+    alumno = AlumnoSerializer(read_only=True)
+    materia = MateriaSerializer(read_only=True)
+
+    class Meta:
+        model = InscripcionAlumno
+        fields = [
+            "id",
+            "alumno",
+            "materia",
+            "fecha_inscripcion",
+            "activa",
+        ]

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from typing import cast
 
 class RegistroUsuario(models.Model):
     ESTADO_CHOICES = [
@@ -33,6 +34,15 @@ class RegistroUsuario(models.Model):
     rol_solicitado = models.CharField(max_length=20, choices=ROL_CHOICES)
     cargo_solicitado = models.CharField(max_length=20, choices=CARGO_CHOICES, blank=True, default="")
 
+    # Si es alumno: carrera a inscribirse
+    carrera_solicitada = models.ForeignKey(
+        "carreras.Carrera", 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name="registros_alumnos"
+    )
+
     # Estado de aprobación
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default="PENDIENTE")
     creado_en = models.DateTimeField(auto_now_add=True)
@@ -52,18 +62,20 @@ class RegistroUsuario(models.Model):
         return self.estado == "PENDIENTE" and self.user is not None
 
     def aprobar(self, admin_user):
-        from alumnos.models import Alumno
+        from alumnos.models import Alumno, InscripcionAlumno
         from personal.models import Personal
+        from inscripciones.models import InscripcionCarrera
         if not self.user:
             raise ValueError("No hay User asociado al registro.")
         if self.estado != "PENDIENTE":
             return
         # Activar usuario
-        self.user.is_active = True
-        self.user.save()
+        user_obj = cast(User, self.user)
+        user_obj.is_active = True  # type: ignore[assignment]
+        user_obj.save()
         # Crear entidad según rol
         if self.rol_solicitado == "ALUMNO":
-            Alumno.objects.get_or_create(
+            alumno, _ = Alumno.objects.get_or_create(
                 user=self.user,
                 defaults={
                     "nombre": self.nombre,
@@ -72,11 +84,23 @@ class RegistroUsuario(models.Model):
                     "email": self.email,
                     "telefono": self.telefono,
                     "direccion": self.direccion,
+                    "carrera_principal": self.carrera_solicitada,
                 }
             )
+            if self.carrera_solicitada:
+                personal = Personal.objects.filter(id=admin_user.id).first()
+                try:
+                    personal = admin_user.personal
+                except (AttributeError, Personal.DoesNotExist):
+                    personal = None
+                InscripcionCarrera.objects.get_or_create(
+                    alumno=alumno,
+                    carrera=self.carrera_solicitada,
+                    defaults={"responsable": personal}
+                )
         elif self.rol_solicitado == "PERSONAL":
             cargo = self.cargo_solicitado or "ADMIN"
-            Personal.objects.get_or_create(
+            Personal.objects.get_or_create(  # type: ignore[attr-defined]
                 user=self.user,
                 defaults={
                     "nombre": self.nombre,
@@ -103,6 +127,7 @@ class RegistroUsuario(models.Model):
             self.observaciones_admin = observaciones
         # Mantener user inactivo en caso de rechazo
         if self.user:
-            self.user.is_active = False
-            self.user.save()
+            user_obj2 = cast(User, self.user)
+            user_obj2.is_active = False  # type: ignore[assignment]
+            user_obj2.save()
         self.save()

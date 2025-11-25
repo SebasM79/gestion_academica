@@ -17,9 +17,21 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await loginDni(dni, password);
+      const res = await loginDni(dni, password);
       toast({ title: "Bienvenido", description: "Inicio de sesión correcto" });
-      navigate("/perfil");
+      console.log("Respuesta del login:", res);
+      if (res?.must_change_password) {
+        navigate("/cambiar-contrasena");
+        return;
+      }
+      
+      if (res?.rol === "PERSONAL:ADMIN") {
+        navigate("/admin");
+      } else if (res?.rol === "ALUMNO") {
+        navigate("/perfil");
+      } else {
+        navigate("/perfil");
+      }
     } catch (err: any) {
       // Si es un ApiError, usar el mensaje formateado
       const errorMessage = err.getFormattedMessage ? err.getFormattedMessage() : (err.message || "Credenciales inválidas");

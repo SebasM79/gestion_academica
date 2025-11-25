@@ -9,6 +9,15 @@ import Login from "@/paginas/Login";
 import Registro from "@/paginas/Registro";
 import NotFound from "@/paginas/NotFound";
 import Perfil from "@/paginas/Perfil";
+import ChangePassword from "./paginas/ChangePassword";
+
+import AdminDashboard from "@/paginas/admin/AdminDashboard";
+import GestionCarreras from "@/paginas/admin/GestionCarrera";
+import GestionMaterias from "@/paginas/admin/GestionMaterias";
+import GestionAlumnos from "@/paginas/admin/GestionAlumnos";
+
+import Materias from "@/paginas/Materias";
+import MateriaDocente from "@/paginas/MateriaDocente";
 
 const queryClient = new QueryClient();
 
@@ -21,9 +30,19 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/carreras" element={<Carreras />} />
+          <Route path="/materias" element={<Materias />} />
+          <Route path="/materias/:id" element={<MateriaDocente />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/cambiar-contrasena" element={<ChangePassword />} />
+
           <Route path="/registro" element={<Registro />} />
           <Route path="/perfil" element={<Perfil />} />
+
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/carreras" element={<GestionCarreras />} />
+          <Route path="/admin/materias" element={<GestionMaterias />} />
+          <Route path="/admin/alumnos" element={<GestionAlumnos />} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
