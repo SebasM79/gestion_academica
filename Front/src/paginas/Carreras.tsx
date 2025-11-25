@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCarreras } from "@/api/catalogo";
+import { useState } from "react";
 
 const Carreras = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const Carreras = () => {
     queryKey: ["carreras"],
     queryFn: fetchCarreras,
   });
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,9 +38,19 @@ const Carreras = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full bg-gradient-academic">
-                  Ver Detalles
+                <Button
+                  onClick={() =>
+                    setExpanded((prev) => ({ ...prev, [carrera.id]: !prev[carrera.id] }))
+                  }
+                  className="mb-2"
+                >
+                  {expanded[carrera.id] ? "Ocultar Detalles" : "Ver Detalles"}
                 </Button>
+                {expanded[carrera.id] && (
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">
+                    {carrera.descripcion?.trim() ? carrera.descripcion : "Sin descripción disponible."}
+                  </p>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -49,3 +61,4 @@ const Carreras = () => {
 };
 
 export default Carreras;
+

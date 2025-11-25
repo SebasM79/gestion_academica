@@ -6,7 +6,7 @@ import { ArrowLeft, Loader} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/ganchos/use-toast";
-import { registroUsuario } from "@/api/auth";
+import { registroUsuario, type RegistroPayload } from "@/api/auth";
 import { fetchCarreras } from "@/api/catalogo";
 
 type Carrera = { id: number; nombre: string; };
@@ -76,7 +76,7 @@ const Registro = () => {
     }
     try {
       // Preparar datos para enviar, asegurando que cargo_solicitado sea string vacío si no se seleccionó
-      const datosEnvio = {
+      const datosEnvio : RegistroPayload = {
         nombre: formData.nombre,
         apellido: formData.apellido,
         dni: formData.dni,
