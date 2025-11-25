@@ -37,6 +37,7 @@ urlpatterns = [
     path("admin/carreras", views.CarreraCreateView.as_view(), name="carreras_create"),
 
     path('admin/materias/', views.AdminMaterias.as_view(), name='admin_materias'),
+    path("admin/materias/count/", views.AdminMateriasWithCountView.as_view(), name="admin_materias_count"),
     path("admin/materia", views.AdminCreateMateria.as_view(), name="materia_create"),
     path("admin/materia/<int:materia_id>", views.AdminMateriaDetailView.as_view(), name="admin_materia_detail"),
     path("admin/docentes", views.AdminDocentes.as_view(), name="admin_docentes"),

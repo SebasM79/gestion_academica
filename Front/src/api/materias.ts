@@ -22,7 +22,7 @@ export async function fetchDocenteMaterias() {
 }
 
 export async function fetchAdminMateriasWithCount() {
-  return apiFetch<MateriaWithCount[]>('/admin/materias/');
+  return apiFetch<MateriaWithCount[]>('/admin/materias/count/');
 }
 
 export async function fetchAlumnoMaterias() {
