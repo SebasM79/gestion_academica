@@ -89,7 +89,7 @@ const MateriaDocente = () => {
                         type="number"
                         min={1}
                         max={10}
-                        step={0.01}
+                        step={0.5}
                         value={notas[an.alumno.id] ?? ''}
                         onChange={(e) => setNotas((prev) => ({ ...prev, [an.alumno.id]: e.target.value }))}
                       />
