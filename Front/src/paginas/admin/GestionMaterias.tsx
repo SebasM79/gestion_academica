@@ -54,19 +54,40 @@ const GestionMaterias = () => {
       [name]: name === "cupo" ? parseInt(value || "0") : name === "carrera" || name === "docente" ? (value ? parseInt(value) : undefined) : value,
     }));
   };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  function validar(){
     if (!formData.nombre.trim() || !formData.carrera) {
       toast({ title: "Validación", description: "Nombre y carrera son requeridos", variant: "destructive" });
       return;
     }
+    //Horario debe de tener este formtaro 08:00
+    if (formData.horario) {
+      const regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      if (!regex.test(formData.horario)) {
+        toast({ title: "Validación", description: "Horario debe tener el formato HH:MM", variant: "destructive" });
+        return;
+      }
+    }
+    if (!formData.horario.trim() || !formData.cupo) {
+      toast({ title: "Validación", description: "Horario y cupo son requeridos", variant: "destructive" });
+      return;
+    }
+    if (!formData.docente) {
+      toast({ title: "Validación", description: "Debe asignar un docente a la materia", variant: "destructive" });
+      return;
+    }
+    return true;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!validar()) return;  
     try {
       if (editingId) {
         const updated = await updateMateria(editingId, formData);
         setMaterias(prev => prev.map(m => (m.id === editingId ? updated : m)));
         toast({ title: "Éxito", description: "Materia actualizada" });
       } else {
+        //Obligar al sistema a tratar a createMateria con un POST
         const created = await createMateria(formData as any);
         setMaterias(prev => [...prev, created]);
         toast({ title: "Éxito", description: "Materia creada" });
@@ -139,7 +160,7 @@ const GestionMaterias = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" method={editingId ? "PATCH" : "POST"}>
                 <div>
                   <Label htmlFor="nombre">Nombre</Label>
                   <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleInput} required />
