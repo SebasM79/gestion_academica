@@ -54,8 +54,7 @@ const Registro = () => {
     });
   };
 
-  const handleRegistro = async (e: React.FormEvent) => {
-    e.preventDefault();
+  function validar() {
     // Validaciones
     if (formData.rol_solicitado === "ALUMNO" && !formData.carrera_solicitada) {
       toast({
@@ -63,7 +62,7 @@ const Registro = () => {
         description: "Debes seleccionar una carrera si te registras como alumno",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     if (formData.rol_solicitado === "PERSONAL" && !formData.cargo_solicitado) {
@@ -72,8 +71,71 @@ const Registro = () => {
         description: "Debes seleccionar un cargo si te registras como personal",
         variant: "destructive",
       });
-      return;
+      return false;
     }
+    if (formData.nombre.trim() === "" || formData.apellido.trim() === "" || formData.dni.trim() === "" || formData.email.trim() === "") {
+      toast({
+        title: "Validación",
+        description: "Todos los campos son obligatorios",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (formData.dni.length < 7 || formData.dni.length > 8) {
+      toast({
+        title: "Validación",
+        description: "El DNI debe tener entre 7 y 8 caracteres",
+        variant: "destructive",
+      });
+      return false;
+    }
+      //validar que solo sean numeros
+      if(isNaN(Number(formData.dni))){
+        toast({
+          title: "Validación",
+          description: "El DNI debe contener solo numeros",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+    //Validar que nombre y apellido solamente ingresen letras
+    const nombreApellidoRegex = /^[a-zA-ZÀ-ÿ\s]+$/;
+    if (!nombreApellidoRegex.test(formData.nombre) || !nombreApellidoRegex.test(formData.apellido)) {
+      toast({
+        title: "Validación",
+        description: "El nombre y apellido solo deben contener letras y espacios",
+        variant: "destructive",
+      });
+      return false;
+    }    
+    
+    //Validar telefono que contenga solo numeros, cantidad maxima de 10 caracteres
+    if (isNaN(Number(formData.telefono)) || formData.telefono.length > 10) {
+      toast({
+        title: "Validación",
+        description: "El teléfono debe contener solo números y tener máximo 10 caracteres",
+        variant: "destructive",
+      });
+      return false;
+    }  
+  
+    if(formData.direccion.trim() === ""){
+      toast({
+        title: "Validación",
+        description: "La direccion es obligatoria",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    return true;
+  }
+
+  const handleRegistro = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!validar()) return;
+    
     try {
       // Preparar datos para enviar, asegurando que cargo_solicitado sea string vacío si no se seleccionó
       const datosEnvio : RegistroPayload = {
@@ -90,7 +152,6 @@ const Registro = () => {
       
       await registroUsuario(datosEnvio);
       toast({ title: "Registro enviado", description: "Un administrador revisará tu solicitud." });
-      console.log("Registro exitoso:", datosEnvio);
       navigate("/login");
     } catch (err: any) {
       // Si es un ApiError, usar el mensaje formateado
