@@ -7,7 +7,6 @@ import { useToast } from "@/ganchos/use-toast";
 import { fetchCarreras } from "@/api/catalogo";
 import { fetchAllAlumnos, updateAlumno, deleteAlumno } from "@/api/admin";
 import { Trash2, Edit2, Plus, X, Loader, ArrowLeftFromLine} from "lucide-react";
-import { format } from "date-fns";
 
 type Carrera = { id: number; nombre: string };
 type Alumno = {
@@ -54,6 +53,70 @@ const GestionAlumnos = () => {
       setLoading(false);
     }
   };
+  
+  function validar(){
+    if (!formData.nombre || !formData.apellido || !formData.dni) {
+      toast({ title: "Validación", description: "Nombre, apellido y DNI son requeridos", variant: "destructive" });
+      return;
+    }
+    if (formData.dni.length < 7 || formData.dni.length > 8) {
+      toast({
+        title: "Validación",
+        description: "El DNI debe tener entre 7 y 8 caracteres",
+        variant: "destructive",
+      });
+      return false;
+    }
+      //validar que solo sean numeros
+      if(isNaN(Number(formData.dni))){
+        toast({
+          title: "Validación",
+          description: "El DNI debe contener solo numeros",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+    //Validar que nombre y apellido solamente ingresen letras
+    const nombreApellidoRegex = /^[a-zA-ZÀ-ÿ\s]+$/;
+    if (!nombreApellidoRegex.test(formData.nombre) || !nombreApellidoRegex.test(formData.apellido)) {
+      toast({
+        title: "Validación",
+        description: "El nombre y apellido solo deben contener letras y espacios",
+        variant: "destructive",
+      });
+      return false;
+    }    
+    
+    //Validar telefono que contenga solo numeros, cantidad maxima de 10 caracteres
+    if (isNaN(Number(formData.telefono)) || formData.telefono.length > 10) {
+      toast({
+        title: "Validación",
+        description: "El teléfono debe contener solo números y tener máximo 10 caracteres",
+        variant: "destructive",
+      });
+      return false;
+    }  
+  
+    if(formData.direccion.trim() === ""){
+      toast({
+        title: "Validación",
+        description: "La direccion es obligatoria",
+        variant: "destructive",
+      });
+      return false;
+    }
+    //Validar carrera principal que sea un numero si no es null
+    if (formData.carrera_principal !== null && formData.carrera_principal !== undefined && isNaN(Number(formData.carrera_principal))) {
+      toast({
+        title: "Validación",
+        description: "La carrera principal es obligatoria",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  }
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -65,10 +128,7 @@ const GestionAlumnos = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nombre || !formData.apellido || !formData.dni) {
-      toast({ title: "Validación", description: "Nombre, apellido y DNI son requeridos", variant: "destructive" });
-      return;
-    }
+    if(!validar())return;
     try {
       if (editingId) {
         const updated = await updateAlumno(editingId, {
