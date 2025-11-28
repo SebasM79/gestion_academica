@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.utils import OperationalError
+import time
 from .models import RegistroUsuario
 
 class RegistroForm(forms.ModelForm):
@@ -58,28 +60,37 @@ class RegistroForm(forms.ModelForm):
         username = registro.dni
         password = registro.dni
 
-        with transaction.atomic():
-            # Evitar duplicados por si se creó en paralelo
-            user, created = User.objects.get_or_create(
-                username=username,
-                defaults={
-                    'email': registro.email or '',
-                    'first_name': registro.nombre or '',
-                    'last_name': registro.apellido or ''
-                }
-            )
-            if not created:
-                # Si ya existía, no sobrescribir datos; asegurarse de no activar
-                user.email = user.email or (registro.email or '')
-                user.first_name = user.first_name or (registro.nombre or '')
-                user.last_name = user.last_name or (registro.apellido or '')
-            # Establecer contraseña inicial igual al DNI
-            user.set_password(password)
-            user.is_active = False
-            user.save()
+        attempts = 0
+        delay = 0.2
+        while True:
+            try:
+                with transaction.atomic():
+                    user, created = User.objects.get_or_create(
+                        username=username,
+                        defaults={
+                            'email': registro.email or '',
+                            'first_name': registro.nombre or '',
+                            'last_name': registro.apellido or ''
+                        }
+                    )
+                    if not created:
+                        user.email = user.email or (registro.email or '')
+                        user.first_name = user.first_name or (registro.nombre or '')
+                        user.last_name = user.last_name or (registro.apellido or '')
+                    user.set_password(password)
+                    user.is_active = False
+                    user.save()
 
-            registro.user = user
-            if commit:
-                registro.save()
+                    registro.user = user
+                    if commit:
+                        registro.save()
+                break
+            except OperationalError as e:
+                if 'locked' in str(e).lower() and attempts < 3:
+                    attempts += 1
+                    time.sleep(delay)
+                    delay *= 2
+                    continue
+                raise
 
         return registro
