@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from django.db.backends.signals import connection_created
+from django.dispatch import receiver
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -94,6 +96,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 60,
+        },
+        'CONN_MAX_AGE': 0,
     }
 }
 
@@ -184,3 +190,13 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+@receiver(connection_created)
+def _enable_sqlite_wal(sender, connection, **kwargs):
+    if connection.vendor == 'sqlite':
+        try:
+            cur = connection.cursor()
+            cur.execute('PRAGMA journal_mode=WAL;')
+            cur.execute('PRAGMA synchronous=NORMAL;')
+        except Exception:
+            pass
