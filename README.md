@@ -1,123 +1,64 @@
-# Cambios en Validación de Contraseña y Registro
+Sistema Académico – Guía para Ejecutar el Proyecto
 
-## Problema Identificado
+Proyecto Funcionando
 
-El problema estaba en cómo se validaba la contraseña. Los validadores de Django, especialmente `UserAttributeSimilarityValidator`, necesitan un usuario para validar correctamente si la contraseña es similar al username, nombre, apellido, etc.
+Para que el sistema funcione completamente:
 
-## Soluciones Implementadas
+Instalar npm install
 
-### 1. Validación de Contraseña Mejorada
+python manage.py runserver
+Backend en: http://127.0.0.1:8000/
 
-**Antes:**
-- La contraseña se validaba en `validate_password1` sin información del usuario
-- `UserAttributeSimilarityValidator` no podía validar correctamente
+npm run dev
+Frontend en: http://localhost:8080/
 
-**Ahora:**
-- La validación se hace en el método `validate` después de tener todos los datos
-- Se crea un usuario temporal con los datos disponibles (nombre, apellido, email, dni) para la validación
-- Esto permite que todos los validadores de Django funcionen correctamente
+Base de datos abierta en SQLite Browser (opcional)
 
-### 2. Creación de Usuario Mejorada
+Este proyecto contiene:
 
-**Antes:**
-- Solo se creaba el usuario con username y password
-- No se guardaban nombre, apellido, email en el usuario
+Backend: Django
+Frontend: React + Vite
+Base de datos: SQLite
 
-**Ahora:**
-- Se crea el usuario con todos los datos disponibles (username, password, email, first_name, last_name)
-- Esto mejora la experiencia del usuario y permite mejor validación
+1. Ejecutar el Backend (Django)
+   
+Abrir una terminal en la carpeta del proyecto:
+cd c:/gestion_academica
 
-### 3. Manejo de Errores Mejorado
+Ejecutar el servidor:
+python manage.py runserver
 
-**Mejoras:**
-- Todos los mensajes de error están en formato de lista para consistencia con DRF
-- Se agregó logging para debugging
-- Mejor manejo de errores de duplicados
-- Normalización de `cargo_solicitado` (cadena vacía para ALUMNO, valor por defecto para PERSONAL)
+El backend quedará disponible en: http://127.0.0.1:8000/
 
-### 4. Frontend Mejorado
+2. Ejecutar el Frontend (React + Vite)
 
-**Mejoras:**
-- Se asegura que los datos se envíen correctamente
-- Se manejan campos opcionales (telefono, direccion) correctamente
-- Se normaliza `cargo_solicitado` antes de enviar
-- Se agregó logging de errores en consola para debugging
-- Los errores se muestran por más tiempo (5 segundos)
+Abrir una segunda terminal (Ctrl + ñ).
+Entrar a la carpeta del frontend:
+cd Front
 
-## Cambios en el Código
+Ejecutar el servidor de desarrollo:
 
-### Backend (`api/serializers.py`)
+npm run dev
 
-1. **Método `validate`:**
-   - Valida contraseñas con usuario temporal
-   - Valida DNI duplicado
-   - Valida registros pendientes
-   - Todos los errores en formato de lista
 
-2. **Método `create`:**
-   - Crea usuario con todos los datos (nombre, apellido, email)
-   - Normaliza `cargo_solicitado`
-   - Mejor manejo de errores con logging
-   - Limpieza de usuario si falla el registro
+El frontend quedará disponible en:
 
-### Backend (`api/views.py`)
+http://localhost:8080/
 
-1. **RegistroUsuarioView:**
-   - Manejo de errores no manejados
-   - Logging para debugging
+3. Abrir la Base de Datos (SQLite)
 
-### Frontend (`Front/src/paginas/Registro.tsx`)
+El proyecto utiliza un archivo SQLite:
 
-1. **handleRegistro:**
-   - Normalización de datos antes de enviar
-   - Manejo de campos opcionales
-   - Mejor logging de errores
-   - Errores visibles por más tiempo
+db.sqlite3
 
-## Validadores de Contraseña de Django
+Si necesitás un visor SQLite:
 
-Los siguientes validadores están configurados en `settings.py`:
+Descargar el programa desde:
+https://sqlitebrowser.org/dl/
 
-1. **UserAttributeSimilarityValidator**: Verifica que la contraseña no sea similar al username, nombre, apellido, etc.
-2. **MinimumLengthValidator**: Verifica que la contraseña tenga al menos 8 caracteres
-3. **CommonPasswordValidator**: Verifica que la contraseña no sea una contraseña común
-4. **NumericPasswordValidator**: Verifica que la contraseña no sea completamente numérica
+Instalar DB Browser for SQLite – Standard installer for 64-bit Windows
 
-## Pruebas Recomendadas
+Abrir el programa y seleccionar:
+Open Database → db.sqlite3
 
-1. **Contraseña similar al DNI:**
-   - DNI: "12345678"
-   - Contraseña: "12345678"
-   - Debe fallar: "La contraseña es muy similar al nombre de usuario"
-
-2. **Contraseña similar al nombre:**
-   - Nombre: "Juan"
-   - Contraseña: "juan1234"
-   - Debe fallar: "La contraseña es muy similar a la información personal"
-
-3. **Contraseña muy corta:**
-   - Contraseña: "1234"
-   - Debe fallar: "Este campo no puede tener menos de 8 caracteres"
-
-4. **Contraseña común:**
-   - Contraseña: "password123"
-   - Puede fallar dependiendo de la lista de contraseñas comunes
-
-5. **DNI duplicado:**
-   - Intentar registrar con un DNI que ya existe
-   - Debe fallar: "Ya existe un usuario con ese DNI"
-
-6. **Registro exitoso:**
-   - Contraseña válida (mínimo 8 caracteres, no similar a datos personales)
-   - DNI único
-   - Todos los campos requeridos completos
-   - Debe funcionar correctamente
-
-## Notas Importantes
-
-- La validación de contraseña ahora usa un usuario temporal con todos los datos disponibles
-- Esto permite que `UserAttributeSimilarityValidator` funcione correctamente
-- Los errores ahora se muestran correctamente en el frontend
-- Se agregó logging para facilitar el debugging
-- El usuario se crea con todos los datos disponibles (nombre, apellido, email)
 
