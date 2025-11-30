@@ -468,6 +468,9 @@ const AdminDashboard = () => {
                               <p className="text-sm text-muted-foreground">
                                 Cupo: {materia.cupo}
                               </p>
+                              <p className="text-sm text-muted-foreground">
+                                Docente: {materia.docente ? `${materia.docente.nombre} ${materia.docente.apellido}` : "-"}
+                              </p>
                             </div>
                           </div>
                         </CardContent>

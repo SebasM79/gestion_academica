@@ -1,64 +1,14 @@
-Sistema Académico – Guía para Ejecutar el Proyecto
+Resumen para el inicio del sistema académico.
 
-Proyecto Funcionando
+Ingresar a la dirección raíz del proyecto. c:/ gestion_academica.
 
-Para que el sistema funcione completamente:
+Dentro del proyecto abierto en el editor de código abrir 2(dos) terminales (Ctrl +ñ).
 
-Instalar npm install
+1º terminal con la dirección raíz: c: gestio_academica; agregar el comando de ejecución del servidor del backend realizado con Django. (python manage.py runserver). Esto abrirá el puerto http://127.0.0.1:8000/ que maneja las direcciones del backend.
 
-python manage.py runserver
-Backend en: http://127.0.0.1:8000/
+2º terminal; en la dirección raíz poner: cd Font/ + enter. Esto ingresa a la url c:gestio_academica/Front:. En esta ubicación agregamos (npm run dev). Esto abrirá el servidor  http://localhost:8080/ donde se encuentra la pantalla principal que verán los usuarios.
 
-npm run dev
-Frontend en: http://localhost:8080/
+Abrir la base de datos “SQLite”. En tal caso de no tenerla, descargarla desde esta url: https://sqlitebrowser.org/dl/, la opcion: DB Browser for SQLite - Standard installer for 64-bit Windows.
 
-Base de datos abierta en SQLite Browser (opcional)
-
-Este proyecto contiene:
-
-Backend: Django
-Frontend: React + Vite
-Base de datos: SQLite
-
-1. Ejecutar el Backend (Django)
-   
-Abrir una terminal en la carpeta del proyecto:
-cd c:/gestion_academica
-
-Ejecutar el servidor:
-python manage.py runserver
-
-El backend quedará disponible en: http://127.0.0.1:8000/
-
-2. Ejecutar el Frontend (React + Vite)
-
-Abrir una segunda terminal (Ctrl + ñ).
-Entrar a la carpeta del frontend:
-cd Front
-
-Ejecutar el servidor de desarrollo:
-
-npm run dev
-
-
-El frontend quedará disponible en:
-
-http://localhost:8080/
-
-3. Abrir la Base de Datos (SQLite)
-
-El proyecto utiliza un archivo SQLite:
-
-db.sqlite3
-
-Si necesitás un visor SQLite:
-
-Descargar el programa desde:
-https://sqlitebrowser.org/dl/
-
-Instalar DB Browser for SQLite – Standard installer for 64-bit Windows
-
-Abrir el programa y seleccionar:
-Open Database → db.sqlite3
-
-
+Ya descargado ingresar y abrir base de datos, y dirigirse a la carpeta db.sqlite3
+Con estos pasos queda habilitado y corriendo el proyecto.

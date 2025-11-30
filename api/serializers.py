@@ -24,7 +24,9 @@ class MateriaSerializer(serializers.ModelSerializer):
         model = Materia
         fields = ["id", "nombre", "horario", "cupo", "carrera"]
 
+
 class PersonalSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Personal
         fields = [
@@ -39,7 +41,24 @@ class PersonalSerializer(serializers.ModelSerializer):
         ]
 
 
+class MateriaWithDocenteSerializer(MateriaSerializer):
+    docente = serializers.SerializerMethodField(read_only=True)
+
+    class Meta(MateriaSerializer.Meta):
+        fields = MateriaSerializer.Meta.fields + ["docente"]
+
+    def get_docente(self, obj):
+        asignacion = getattr(obj, "docentes", None)
+        if asignacion is None:
+            return None
+        asignacion_obj = asignacion.select_related("docente").first()
+        if not asignacion_obj:
+            return None
+        return PersonalSerializer(asignacion_obj.docente).data
+
+
 class MateriaWithCountSerializer(MateriaSerializer):
+
     total_alumnos = serializers.IntegerField(read_only=True)
 
     class Meta(MateriaSerializer.Meta):
