@@ -6,12 +6,12 @@ import { Label } from "@/componentes/ui/label";
 import { Select } from "@/componentes/ui/select";
 import { useToast } from "@/ganchos/use-toast";
 import { fetchCarreras } from "@/api/catalogo";
-import { fetchDocentesByMateria } from "@/api/materias";
-import { createMateria, updateMateria, deleteMateria, fetchAllMaterias, fetchAllDocentes, Docente } from "@/api/admin";
+import { createMateria, updateMateria, deleteMateria, fetchAllMaterias, fetchAllDocentes, Docente, Materia as MateriaAdmin } from "@/api/admin";
+
 import { Trash2, Edit2, Plus, X, Loader, ArrowLeftFromLine } from "lucide-react";
 
 type Carrera = { id: number; nombre: string; duracion_anios?: number; descripcion?: string };
-type Materia = { id: number; nombre: string; horario: string; cupo: number; carrera: Carrera };
+type Materia = MateriaAdmin;
 
 const GestionMaterias = () => {
   const [materias, setMaterias] = useState<Materia[]>([]);
@@ -20,7 +20,7 @@ const GestionMaterias = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<{ nombre: string; horario: string; cupo: number; carrera?: number , docente?: number}>({
+  const [formData, setFormData] = useState<{ nombre: string; horario: string; cupo: number; carrera?: number; docente?: number | null }>({
     nombre: "",
     horario: "",
     cupo: 30,
@@ -54,7 +54,8 @@ const GestionMaterias = () => {
       [name]: name === "cupo" ? parseInt(value || "0") : name === "carrera" || name === "docente" ? (value ? parseInt(value) : undefined) : value,
     }));
   };
-  function validar(){
+
+  function validar() {
     if (!formData.nombre.trim() || !formData.carrera) {
       toast({ title: "Validación", description: "Nombre y carrera son requeridos", variant: "destructive" });
       return;
@@ -80,7 +81,7 @@ const GestionMaterias = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!validar()) return;  
+    if (!validar()) return;
     try {
       if (editingId) {
         const updated = await updateMateria(editingId, formData);
@@ -101,9 +102,14 @@ const GestionMaterias = () => {
   };
 
   const handleEdit = async (m: Materia) => {
-    const docente = await fetchDocentesByMateria(m.id);
     setEditingId(m.id);
-    setFormData({ nombre: m.nombre, horario: m.horario, cupo: m.cupo, carrera: m.carrera?.id, docente: docente[0]?.id});
+    setFormData({
+      nombre: m.nombre,
+      horario: m.horario,
+      cupo: m.cupo,
+      carrera: m.carrera?.id,
+      docente: m.docente ? m.docente.id : undefined,
+    });
     setShowForm(true);
   };
 
@@ -128,9 +134,11 @@ const GestionMaterias = () => {
       </div>
     );
   }
+
   const backPage = () => {
     window.history.back();
   }
+
   const selectedCarrera = carreras.find(c => c.id === formData.carrera);
 
   return (
@@ -140,11 +148,11 @@ const GestionMaterias = () => {
           <h1 className="text-3xl font-bold text-foreground">Gestión de Materias</h1>
           <p className="text-muted-foreground mt-2">Crear, editar y eliminar materias</p>
         </div>
-        <div className=" container mx-auto px-4 pb-4"> 
-            <button onClick={() => backPage() } className="flex items-center gap-2 text-sm text-primary hover:underline">
-              <ArrowLeftFromLine className="h-4 w-4" />
-              Volver
-            </button>
+        <div className=" container mx-auto px-4 pb-4">
+          <button onClick={() => backPage()} className="flex items-center gap-2 text-sm text-primary hover:underline">
+            <ArrowLeftFromLine className="h-4 w-4" />
+            Volver
+          </button>
         </div>
       </div>
 
@@ -184,9 +192,9 @@ const GestionMaterias = () => {
                   </select>
                 </div>
 
-                  <div>
+                <div>
                   <Label htmlFor="docente">Docente Asignado</Label>
-                  <select id="docente" name="docente" value={formData.docente ?? ""} onChange={handleInput} className="w-full px-3 py-2 border rounded-md bg-background" disabled= {editingId ? true : false}>
+                  <select id="docente" name="docente" value={formData.docente ?? ""} onChange={handleInput} className="w-full px-3 py-2 border rounded-md bg-background">
                     <option value="">-- Sin asignar --</option>
                     {docentes.map(d => <option key={d.id} value={d.id}>{d.nombre} {d.apellido}</option>)}
                   </select>

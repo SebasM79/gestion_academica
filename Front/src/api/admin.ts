@@ -15,6 +15,7 @@ export type Materia = {
   horario: string;
   cupo: number;
   carrera: Carrera;
+  docente?: Docente | null;
 };
 export type Alumno = {
     id: number;
@@ -106,12 +107,12 @@ export async function deleteCarrera(carreraId: number) {
 
 //ENDPOINTS MATERIAS
 // Crear materia (Admin)
-export async function createMateria(data: { nombre: string; horario?: string; cupo?: number; carrera: number }) {
+export async function createMateria(data: { nombre: string; horario?: string; cupo?: number; carrera: number; docente?: number }) {
     return apiPost<Materia>('/admin/materia', data);
 }
 
 // Actualizar materia (Admin)
-export async function updateMateria(materiaId: number, data: Partial<{ nombre: string; horario: string; cupo: number; carrera: number }>) {
+export async function updateMateria(materiaId: number, data: Partial<{ nombre: string; horario: string; cupo: number; carrera: number; docente: number | null }>) {
     return apiPatch<Materia>(`/admin/materia/${materiaId}`, data);
 }
 

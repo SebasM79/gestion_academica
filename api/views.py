@@ -27,6 +27,7 @@ from .serializers import (
     CarreraSerializer,
     MateriaSerializer,
     MateriaWithCountSerializer,
+    MateriaWithDocenteSerializer,
     AlumnoSerializer,
     NotaSerializer,
     NotaLiteSerializer,
@@ -573,7 +574,7 @@ class AdminMaterias(APIView):
 
     def get(self, request):
         materias = Materia.objects.all()
-        return Response(MateriaSerializer(materias, many=True).data)
+        return Response(MateriaWithDocenteSerializer(materias, many=True).data)
 
 class AdminCreateMateria(APIView):
     permission_classes = [IsAdminOrPreceptor]
@@ -592,15 +593,20 @@ class AdminCreateMateria(APIView):
             return Response({"detail": "Carrera no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
         
         docente = None
-        if docente_id:
+        if docente_id is not None:
             try:
                 docente = Personal.objects.get(id=docente_id)
             except Personal.DoesNotExist:
                 return Response({"detail": "Docente no encontrado"}, status=status.HTTP_400_BAD_REQUEST)
-            
+            if docente.cargo != "DOCENTE":
+                return Response({"detail": "El personal seleccionado no es DOCENTE"}, status=status.HTTP_400_BAD_REQUEST)
+
         materia = Materia.objects.create(nombre=nombre, horario=horario, cupo=cupo, carrera=carrera)
-        AsignacionDocente.objects.create(docente=docente, materia=materia)
-        return Response(MateriaSerializer(materia).data, status=status.HTTP_201_CREATED)
+        # Relación 1:1 lógica: como máximo un docente por materia
+        if docente is not None:
+            AsignacionDocente.objects.filter(materia=materia).delete()
+            AsignacionDocente.objects.create(docente=docente, materia=materia)
+        return Response(MateriaWithDocenteSerializer(materia).data, status=status.HTTP_201_CREATED)
     
 class AdminMateriaDetailView(APIView):
     permission_classes = [IsAdminOrPreceptor]
@@ -611,7 +617,7 @@ class AdminMateriaDetailView(APIView):
         except Materia.DoesNotExist:
             return Response({"detail": "Materia no encontrada"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Permitir actualizar nombre/horario/cupo/carrera
+        # Permitir actualizar nombre/horario/cupo/carrera/docente
         if "nombre" in request.data:
             materia.nombre = request.data["nombre"]
         if "horario" in request.data:
@@ -627,8 +633,26 @@ class AdminMateriaDetailView(APIView):
                 materia.carrera = carrera
             except Carrera.DoesNotExist:
                 return Response({"detail": "Carrera no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Actualizar docente asignado (1:1 lógico)
+        if "docente" in request.data:
+            docente_id = request.data.get("docente")
+
+            if docente_id is None or docente_id == "":
+                # Quitar asignación de docente
+                AsignacionDocente.objects.filter(materia=materia).delete()
+            else:
+                try:
+                    docente = Personal.objects.get(id=docente_id)
+                except Personal.DoesNotExist:
+                    return Response({"detail": "Docente no encontrado"}, status=status.HTTP_400_BAD_REQUEST)
+                if docente.cargo != "DOCENTE":
+                    return Response({"detail": "El personal seleccionado no es DOCENTE"}, status=status.HTTP_400_BAD_REQUEST)
+                # Asegurar que haya solo un docente por materia
+                AsignacionDocente.objects.filter(materia=materia).exclude(docente=docente).delete()
+                AsignacionDocente.objects.get_or_create(docente=docente, materia=materia)
         materia.save()
-        return Response(MateriaSerializer(materia).data)
+        return Response(MateriaWithDocenteSerializer(materia).data)
 
     def delete(self, request, materia_id: int):
         try:

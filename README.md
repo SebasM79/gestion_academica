@@ -1,123 +1,14 @@
-# Cambios en Validación de Contraseña y Registro
+Resumen para el inicio del sistema académico.
 
-## Problema Identificado
+Ingresar a la dirección raíz del proyecto. c:/ gestion_academica.
 
-El problema estaba en cómo se validaba la contraseña. Los validadores de Django, especialmente `UserAttributeSimilarityValidator`, necesitan un usuario para validar correctamente si la contraseña es similar al username, nombre, apellido, etc.
+Dentro del proyecto abierto en el editor de código abrir 2(dos) terminales (Ctrl +ñ).
 
-## Soluciones Implementadas
+1º terminal con la dirección raíz: c: gestio_academica; agregar el comando de ejecución del servidor del backend realizado con Django. (python manage.py runserver). Esto abrirá el puerto http://127.0.0.1:8000/ que maneja las direcciones del backend.
 
-### 1. Validación de Contraseña Mejorada
+2º terminal; en la dirección raíz poner: cd Font/ + enter. Esto ingresa a la url c:gestio_academica/Front:. En esta ubicación agregamos (npm run dev). Esto abrirá el servidor  http://localhost:8080/ donde se encuentra la pantalla principal que verán los usuarios.
 
-**Antes:**
-- La contraseña se validaba en `validate_password1` sin información del usuario
-- `UserAttributeSimilarityValidator` no podía validar correctamente
+Abrir la base de datos “SQLite”. En tal caso de no tenerla, descargarla desde esta url: https://sqlitebrowser.org/dl/, la opcion: DB Browser for SQLite - Standard installer for 64-bit Windows.
 
-**Ahora:**
-- La validación se hace en el método `validate` después de tener todos los datos
-- Se crea un usuario temporal con los datos disponibles (nombre, apellido, email, dni) para la validación
-- Esto permite que todos los validadores de Django funcionen correctamente
-
-### 2. Creación de Usuario Mejorada
-
-**Antes:**
-- Solo se creaba el usuario con username y password
-- No se guardaban nombre, apellido, email en el usuario
-
-**Ahora:**
-- Se crea el usuario con todos los datos disponibles (username, password, email, first_name, last_name)
-- Esto mejora la experiencia del usuario y permite mejor validación
-
-### 3. Manejo de Errores Mejorado
-
-**Mejoras:**
-- Todos los mensajes de error están en formato de lista para consistencia con DRF
-- Se agregó logging para debugging
-- Mejor manejo de errores de duplicados
-- Normalización de `cargo_solicitado` (cadena vacía para ALUMNO, valor por defecto para PERSONAL)
-
-### 4. Frontend Mejorado
-
-**Mejoras:**
-- Se asegura que los datos se envíen correctamente
-- Se manejan campos opcionales (telefono, direccion) correctamente
-- Se normaliza `cargo_solicitado` antes de enviar
-- Se agregó logging de errores en consola para debugging
-- Los errores se muestran por más tiempo (5 segundos)
-
-## Cambios en el Código
-
-### Backend (`api/serializers.py`)
-
-1. **Método `validate`:**
-   - Valida contraseñas con usuario temporal
-   - Valida DNI duplicado
-   - Valida registros pendientes
-   - Todos los errores en formato de lista
-
-2. **Método `create`:**
-   - Crea usuario con todos los datos (nombre, apellido, email)
-   - Normaliza `cargo_solicitado`
-   - Mejor manejo de errores con logging
-   - Limpieza de usuario si falla el registro
-
-### Backend (`api/views.py`)
-
-1. **RegistroUsuarioView:**
-   - Manejo de errores no manejados
-   - Logging para debugging
-
-### Frontend (`Front/src/paginas/Registro.tsx`)
-
-1. **handleRegistro:**
-   - Normalización de datos antes de enviar
-   - Manejo de campos opcionales
-   - Mejor logging de errores
-   - Errores visibles por más tiempo
-
-## Validadores de Contraseña de Django
-
-Los siguientes validadores están configurados en `settings.py`:
-
-1. **UserAttributeSimilarityValidator**: Verifica que la contraseña no sea similar al username, nombre, apellido, etc.
-2. **MinimumLengthValidator**: Verifica que la contraseña tenga al menos 8 caracteres
-3. **CommonPasswordValidator**: Verifica que la contraseña no sea una contraseña común
-4. **NumericPasswordValidator**: Verifica que la contraseña no sea completamente numérica
-
-## Pruebas Recomendadas
-
-1. **Contraseña similar al DNI:**
-   - DNI: "12345678"
-   - Contraseña: "12345678"
-   - Debe fallar: "La contraseña es muy similar al nombre de usuario"
-
-2. **Contraseña similar al nombre:**
-   - Nombre: "Juan"
-   - Contraseña: "juan1234"
-   - Debe fallar: "La contraseña es muy similar a la información personal"
-
-3. **Contraseña muy corta:**
-   - Contraseña: "1234"
-   - Debe fallar: "Este campo no puede tener menos de 8 caracteres"
-
-4. **Contraseña común:**
-   - Contraseña: "password123"
-   - Puede fallar dependiendo de la lista de contraseñas comunes
-
-5. **DNI duplicado:**
-   - Intentar registrar con un DNI que ya existe
-   - Debe fallar: "Ya existe un usuario con ese DNI"
-
-6. **Registro exitoso:**
-   - Contraseña válida (mínimo 8 caracteres, no similar a datos personales)
-   - DNI único
-   - Todos los campos requeridos completos
-   - Debe funcionar correctamente
-
-## Notas Importantes
-
-- La validación de contraseña ahora usa un usuario temporal con todos los datos disponibles
-- Esto permite que `UserAttributeSimilarityValidator` funcione correctamente
-- Los errores ahora se muestran correctamente en el frontend
-- Se agregó logging para facilitar el debugging
-- El usuario se crea con todos los datos disponibles (nombre, apellido, email)
-
+Ya descargado ingresar y abrir base de datos, y dirigirse a la carpeta db.sqlite3
+Con estos pasos queda habilitado y corriendo el proyecto.
