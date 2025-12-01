@@ -6,15 +6,15 @@ Dentro del proyecto abierto en el editor de código abrir 2(dos) terminales (Ctr
 
 **1º terminal** con la dirección raíz: c: gestion_academica; 
 1. Ejecutar en terminal los siguientes comandos:
-        python manage.py makemigrations alumnos
-        python manage.py makemigrations carreras
-        python manage.py makemigrations materias
-        python manage.py makemigrations personal
-        python manage.py makemigrations inscripciones
-        python manage.py makemigrations notas
-        python manage.py makemigrations personas
-        python manage.py makemigrations api
-        python manage.py makemigrations usuarios 
++ python manage.py makemigrations alumnos
++ python manage.py makemigrations carreras
++ python manage.py makemigrations materias
++ python manage.py makemigrations personal
++ python manage.py makemigrations inscripciones
++ python manage.py makemigrations notas
++ python manage.py makemigrations personas
++ python manage.py makemigrations api
++ python manage.py makemigrations usuarios 
 
 2. Ejecutar en terminal **python manage.py migrate**
 
