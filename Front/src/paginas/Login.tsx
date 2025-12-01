@@ -25,7 +25,7 @@ const Login = () => {
         return;
       }
       
-      if (res?.rol === "PERSONAL:ADMIN") {
+      if (res?.rol === "PERSONAL:ADMIN" || res?.rol === "ADMIN" || res?.rol === "Administrativo") {
         navigate("/admin");
       } else if (res?.rol === "ALUMNO") {
         navigate("/perfil");
