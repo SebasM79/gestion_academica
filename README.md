@@ -31,3 +31,11 @@ Abrir la base de datos “SQLite”. En tal caso de no tenerla, descargarla desd
 Ya descargado ingresar y abrir base de datos, y dirigirse a la carpeta db.sqlite3
 
 Con estos pasos queda habilitado y corriendo el proyecto.
+
+
+
+**Entregas adicionales**
+
+Enlace documentacion: [Documentacion](https://docs.google.com/document/d/1cFwkzyti0RhCMO-eVUYTz2nFI1tlbdS8CX_rBqVDwR4/edit?usp=sharing)
+
+Enlace video: [Video](https://drive.google.com/file/d/1-wzzY4pEpHbHhamZu9MegDND-7JvQgUO/view?usp=sharing)
